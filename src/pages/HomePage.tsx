@@ -1,6 +1,6 @@
-import React from "react";
+import { FC } from "react"
 
-const HomePage = () => {
+const HomePage: FC = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white flex items-center justify-center">
       <div className="text-center px-6">
@@ -17,7 +17,7 @@ const HomePage = () => {
         </button>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default HomePage;
+export default HomePage 
