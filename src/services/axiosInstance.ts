@@ -1,20 +1,20 @@
-import axios from "axios";
+import axios, { AxiosInstance } from "axios"
 
-const axiosInstance = axios.create({
+const axiosInstance: AxiosInstance = axios.create({
   // Replace with actual API base URL tam thoi chua co
   baseURL: "https://your-api-url.com/api",
   headers: {
     "Content-Type": "application/json",
   },
-});
+})
 
 // Optional: Interceptor để gắn token
-// axiosInstance.interceptors.request.use((config) => {
-//   const token = localStorage.getItem("token");
+// axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+//   const token = localStorage.getItem("token")
 //   if (token) {
-//     config.headers.Authorization = `Bearer ${token}`;
+//     config.headers.Authorization = `Bearer ${token}`
 //   }
-//   return config;
-// });
+//   return config
+// })
 
-export default axiosInstance;
+export default axiosInstance 
