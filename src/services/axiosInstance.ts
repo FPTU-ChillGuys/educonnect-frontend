@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios"
+import axios, { AxiosInstance } from "axios"
 
 const axiosInstance: AxiosInstance = axios.create({
   // Replace with actual API base URL tam thoi chua co
