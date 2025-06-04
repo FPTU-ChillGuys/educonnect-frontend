@@ -6,6 +6,7 @@ import LoginPage from "../pages/LoginPage";
 import MainLayout from "../components/layout/MainLayout";
 import Dashboard from "../pages/Dashboard";
 
+
 const AppRoute: FC = () => {
   return (
     <BrowserRouter>
@@ -20,7 +21,7 @@ const AppRoute: FC = () => {
         </Route>
       </Routes>
     </BrowserRouter>
-  );
-};
+  )
+}
 
-export default AppRoute;
+export default AppRoute 
