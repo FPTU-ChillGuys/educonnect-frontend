@@ -1,6 +1,6 @@
 import { FC } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, Users, MessageSquare, Calendar } from "lucide-react";
+import {  Users, MessageSquare, Calendar } from "lucide-react";
 import Button from "../components/ui/Button";
 
 const HomePage: FC = () => {
@@ -9,9 +9,7 @@ const HomePage: FC = () => {
       <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-b border-gray-200 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg mr-2">
-              <BookOpen className="text-blue-700" size={24} />
-            </div>
+            <img src="/logo.PNG" alt="logo" className="text-blue-700 mr-2" width={35} height={35} />
             <span className="text-xl font-bold text-blue-800">EduConnect</span>
           </div>
           <Link to="/login">

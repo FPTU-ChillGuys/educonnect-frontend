@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { User, Key, BookOpen, ArrowLeft, LogIn } from "lucide-react";
+import { User, Key, ArrowLeft, LogIn } from "lucide-react";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import { ROUTES } from "../config/routes";
@@ -33,9 +33,7 @@ const LoginPage: React.FC = () => {
 
       <div className="w-full max-w-md mt-16">
         <div className="flex items-center justify-center mb-8">
-          <div className="p-3 bg-blue-100 rounded-lg mr-3">
-          <BookOpen className="text-blue-700" size={24} />
-          </div>
+          <img src="/logo.PNG" alt="logo" className="text-blue-700 mr-3" width={60} height={60} />
           <h1 className="text-3xl font-bold text-blue-800">EduConnect</h1>
         </div>
 
