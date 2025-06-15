@@ -12,13 +12,15 @@ import {
   ChevronRight,
   School,
   GraduationCap,
-  ClipboardList,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import Button from "../components/ui/Button";
+import { ROUTES } from "../config/routes";
 
 // TODO: Thay thế mock userRole này bằng dữ liệu thực tế từ API khi có
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   const getStats = () => {
     return [
       {
@@ -74,22 +76,17 @@ const Dashboard: React.FC = () => {
       {
         text: "Thêm lớp học mới",
         icon: <School size={16} />,
-        link: "#",
+        link: ROUTES.ClassManagement,
       },
       {
         text: "Quản lý giáo viên",
         icon: <GraduationCap size={16} />,
-        link: "#",
+        link: ROUTES.TeacherManagement,
       },
       {
         text: "Cập nhật thời khóa biểu",
         icon: <Calendar size={16} />,
-        link: "#",
-      },
-      {
-        text: "Xem thống kê tổng quan",
-        icon: <ClipboardList size={16} />,
-        link: "#",
+        link: ROUTES.TimeTable,
       },
     ];
   };
@@ -174,6 +171,7 @@ const Dashboard: React.FC = () => {
                   leftIcon={action.icon}
                   rightIcon={<ChevronRight size={16} />}
                   className="justify-between"
+                  onClick={() => navigate(action.link)}
                 >
                   {action.text}
                 </Button>

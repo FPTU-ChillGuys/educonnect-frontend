@@ -5,26 +5,22 @@ import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import { ROUTES } from "../config/routes";
 
-
-
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
-
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex flex-col items-center px-4 py-8 relative">
       <Link
-        to={ROUTES.HOME}
+        to={ROUTES.HomePage}
         className="absolute top-4 left-4 inline-flex items-center text-blue-700 hover:text-blue-500 transition-colors duration-300"
       >
         <ArrowLeft className="w-5 h-5 mr-2" />
@@ -33,7 +29,13 @@ const LoginPage: React.FC = () => {
 
       <div className="w-full max-w-md mt-16">
         <div className="flex items-center justify-center mb-8">
-          <img src="/logo.PNG" alt="logo" className="text-blue-700 mr-3" width={60} height={60} />
+          <img
+            src="/logo.PNG"
+            alt="logo"
+            className="text-blue-700 mr-3"
+            width={60}
+            height={60}
+          />
           <h1 className="text-3xl font-bold text-blue-800">EduConnect</h1>
         </div>
 
@@ -107,8 +109,6 @@ const LoginPage: React.FC = () => {
                 Đăng nhập
               </Button>
             </form>
-
-   
           </div>
         </div>
 
