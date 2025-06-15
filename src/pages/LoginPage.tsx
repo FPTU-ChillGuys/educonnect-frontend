@@ -1,11 +1,14 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { User, Key, ArrowLeft, LogIn } from "lucide-react";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import { ROUTES } from "../config/routes";
+import axiosInstance from "../services/axiosInstance";
+import { AxiosError } from "axios";
 
 const LoginPage: React.FC = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -15,6 +18,53 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
+
+    try {
+      const response = await axiosInstance.post("/api/auth/login", {
+        email,
+        password,
+      });
+
+
+      // Lưu token vào localStorage
+      localStorage.setItem("token", response.data.data.accessToken);
+
+      // Giải mã JWT token để lấy thông tin người dùng
+      const token = response.data.data.accessToken;
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+
+      const payload = JSON.parse(jsonPayload);
+
+
+      // Lưu thông tin người dùng vào localStorage
+      const userData = {
+        id: payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"],
+        name: payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"].split('@')[0],
+        email: payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"],
+        role: payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"],
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"].split('@')[0])}`
+      };
+      console.log("User Data to be saved:", userData);
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      // Chuyển hướng đến trang dashboard
+      navigate(ROUTES.Dashboard);
+    } catch (error) {
+      console.error("Login Error:", error);
+      if (error instanceof AxiosError) {
+        setError(
+          error.response?.data?.message || "Đăng nhập thất bại. Vui lòng thử lại."
+        );
+      } else {
+        setError("Đăng nhập thất bại. Vui lòng thử lại.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

@@ -3,9 +3,15 @@ export const ROUTES = {
   Login: "/login",
   Dashboard: "/dashboard",
   Setting: "setting",
+  
+  // Admin routes
   ClassManagement: "class-management",
   TeacherManagement: "teacher-management",
   TimeTable: "timetable",
+  
+  // Teacher routes
+  TeacherSchedule: "teacher-schedule",
+  TeacherClass: "teacher-class",
 } as const;
 
 // Định nghĩa kiểu cho routes

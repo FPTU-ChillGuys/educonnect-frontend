@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -20,26 +20,22 @@ interface SidebarLinkProps {
   disabled?: boolean;
 }
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: "admin" | "teacher";
-  avatar?: string;
-}
-
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
+  const [user, setUser] = useState<Record<string, string> | null>(null);
 
-  // TODO: Replace with actual API call
-  const name = "Nguyễn Admin";
-  const mockUser: User = {
-    id: "1",
-    name,
-    email: "admin@admin.com",
-    role: "admin",
-    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}`,
-  };
+  useEffect(() => {
+    // Lấy thông tin người dùng từ localStorage
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        const userData = JSON.parse(userStr);
+        setUser(userData);
+      } catch (error) {
+        console.error("Lỗi khi parse thông tin người dùng:", error);
+      }
+    }
+  }, []);
 
   const getNavigationItems = () => {
     const baseItems = [
@@ -74,18 +70,17 @@ const Sidebar: React.FC = () => {
       ],
       teacher: [
         {
-          to: "",
+          to: ROUTES.TeacherSchedule,
           icon: <CalendarDays size={20} />,
           label: "Lịch giảng dạy",
           disabled: false,
         },
         {
-          to: "",
+          to: ROUTES.TeacherClass,
           icon: <Users size={20} />,
           label: "Lớp chủ nhiệm",
           disabled: false,
         },
-
         {
           to: "",
           icon: <BookOpen size={20} />,
@@ -104,13 +99,13 @@ const Sidebar: React.FC = () => {
       },
     ];
 
-    // Map user role to the correct key in roleSpecificItems
-    const roleKey = mockUser.role;
+    // Sử dụng role từ thông tin người dùng thực tế
+    const roleKey = user?.role;
 
     return [
       ...baseItems,
-      ...(roleKey && roleSpecificItems[roleKey]
-        ? roleSpecificItems[roleKey]
+      ...(roleKey && roleSpecificItems[roleKey as keyof typeof roleSpecificItems]
+        ? roleSpecificItems[roleKey as keyof typeof roleSpecificItems]
         : []),
       ...commonItems,
     ];
@@ -150,13 +145,17 @@ const Sidebar: React.FC = () => {
   };
 
   const handleLogout = () => {
-    // TODO: Implement logout functionality when API is available
-    navigate("/"); // Điều hướng về trang chủ
+    // Xóa token và thông tin người dùng khỏi localStorage
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    
+    // Chuyển hướng về trang login
+    navigate(ROUTES.Login);
   };
 
   return (
     <aside className="h-screen w-64 bg-white border-r border-gray-200 flex flex-col">
-      <div className="border-b border-gray-200 p-4">
+      <div className="border-b border-gray-200 py-3 px-6 pt-3.5 pb-4">
         <div className="flex items-center gap-1">
           <img
             src="/logo.PNG"
@@ -185,17 +184,17 @@ const Sidebar: React.FC = () => {
 
       <div className="p-4 border-t border-gray-200">
         <div className="flex items-center gap-3">
-          <Avatar src={mockUser.avatar} alt={mockUser.name} status="online" />
+          <Avatar src={user?.avatar} alt={user?.name || 'User'} status="online" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 truncate">
-              {mockUser.name}
+              {user?.name || 'User'}
             </p>
             <p className="text-xs text-gray-500 truncate">
-              {mockUser.role === "admin"
+              {user?.role === "admin"
                 ? "Administrator"
-                : mockUser.role === "teacher"
+                : user?.role === "teacher"
                 ? "Teacher"
-                : "Parent"}
+                : "User"}
             </p>
           </div>
           <button

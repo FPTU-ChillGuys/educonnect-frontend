@@ -1,20 +1,19 @@
-import axios, { AxiosInstance } from "axios"
+import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios"
 
 const axiosInstance: AxiosInstance = axios.create({
-  // Replace with actual API base URL tam thoi chua co
-  baseURL: "https://your-api-url.com/api",
+  baseURL: import.meta.env.VITE_API_URL,
   headers: {
     "Content-Type": "application/json",
   },
 })
 
-// Optional: Interceptor để gắn token
-// axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-//   const token = localStorage.getItem("token")
-//   if (token) {
-//     config.headers.Authorization = `Bearer ${token}`
-//   }
-//   return config
-// })
+// Interceptor để gắn token
+axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  const token = localStorage.getItem("token")
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
 
 export default axiosInstance 

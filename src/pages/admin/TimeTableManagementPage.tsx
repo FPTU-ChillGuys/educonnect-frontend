@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
-import { Plus, Edit2, Trash2, Download, Calendar } from "lucide-react";
+import { Plus, Edit2, Trash2, Download, Calendar, Filter } from "lucide-react";
 
 interface TimeSlot {
   id: string;
@@ -311,15 +311,18 @@ const TimetablePage: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="w-full md:w-64">
-          <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Filters */}
+        <Card className="lg:col-span-1 h-full">
             <CardHeader>
-              <CardTitle>Bộ lọc</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Filter size={18} />
+              Bộ lọc
+            </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                   Lớp
                 </label>
                 <div className="relative">
@@ -337,7 +340,7 @@ const TimetablePage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                   Học kỳ
                 </label>
                 <div className="relative">
@@ -353,7 +356,7 @@ const TimetablePage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                   Năm học
                 </label>
                 <div className="relative">
@@ -364,23 +367,45 @@ const TimetablePage: React.FC = () => {
                 </div>
               </div>
 
+            <div className="pt-4 border-t border-gray-200">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">
+                Thống kê môn học
+              </h4>
+              <div className="space-y-2 text-xs">
+                {Array.from(new Set(timetableData.map(slot => slot.subject))).slice(0, 5).map((subject) => {
+                  const count = timetableData.filter(slot => slot.subject === subject).length;
+                  return (
+                    <div key={subject} className="flex justify-between">
+                      <span className="text-gray-600">{subject}:</span>
+                      <span className="font-medium">{count} tiết</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex-1" />
               <Button variant="outline" fullWidth>
                 Áp dụng bộ lọc
               </Button>
             </CardContent>
           </Card>
-        </div>
 
-        <div className="flex-1 overflow-x-auto">
-          <Card>
+        {/* Timetable */}
+        <div className="lg:col-span-3">
+          <Card className="h-full">
             <CardHeader className="bg-blue-50">
-              <CardTitle className="text-center">
-                Thời khóa biểu lớp {selectedClass} - Học kỳ 1 - Năm học
-                2024-2025
+              <div className="flex justify-between items-center">
+                <CardTitle>
+                  Thời khóa biểu lớp {selectedClass}
               </CardTitle>
+                <span className="text-sm text-gray-500">
+                  Học kỳ 1 - Năm học 2024-2025
+                </span>
+              </div>
             </CardHeader>
             <CardContent className="p-4">
-              <div className="min-w-[800px]">
+              <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr>
@@ -408,14 +433,14 @@ const TimetablePage: React.FC = () => {
                           return (
                             <td
                               key={`${day}-${timeSlot.id}`}
-                              className="border p-2 relative group"
+                              className="border p-2 relative group hover:bg-gray-50"
                             >
                               {slot ? (
                                 <div className="min-h-16">
                                   <div className="font-medium text-blue-800">
                                     {slot.subject}
                                   </div>
-                                  <div className="text-sm">{slot.teacher}</div>
+                                  <div className="text-sm text-gray-600">{slot.teacher}</div>
                                   <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 p-1 flex gap-1">
                                     <button className="p-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">
                                       <Edit2 size={14} />
