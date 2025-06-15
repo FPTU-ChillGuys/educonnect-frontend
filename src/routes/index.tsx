@@ -5,18 +5,43 @@ import HomePage from "../pages/HomePage";
 import LoginPage from "../pages/LoginPage";
 import MainLayout from "../components/layout/MainLayout";
 import Dashboard from "../pages/Dashboard";
+import SettingPage from "../pages/SettingPage";
+import ClassManagementPage from "../pages/admin/ClassManagementPage";
+import TeacherManagementPage from "../pages/admin/TeacherManagementPage";
+import TimetableManagementPage from "../pages/admin/TimeTableManagementPage";
 
 const AppRoute: FC = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path={ROUTES.HOME} element={<HomePage />} />
-        <Route path={ROUTES.LOGIN} element={<LoginPage />} />
-        <Route path={ROUTES.MAIN_LAYOUT} element={<MainLayout />}>
-          {/* Define nested routes here if needed */}
+        <Route path={ROUTES.HomePage} element={<HomePage />} />
+        <Route path={ROUTES.Login} element={<LoginPage />} />
+
+        <Route path={ROUTES.Dashboard} element={<MainLayout />}>
+          {/* Common for both roles */}
           <Route index element={<Dashboard />} />
-          {/* Add other nested routes as needed */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+
+          {/* Admin-only */}
+          <Route
+            path={ROUTES.ClassManagement}
+            element={<ClassManagementPage />}
+          />
+          <Route
+            path={ROUTES.TimeTable}
+            element={<TimetableManagementPage />}
+          />
+          {/* Teacher-only */}
+          <Route
+            path={ROUTES.TeacherManagement}
+            element={<TeacherManagementPage />}
+          />
+
+          {/* Catch-all */}
+          <Route path={ROUTES.Setting} element={<SettingPage />} />
+          <Route
+            path="*"
+            element={<Navigate to={ROUTES.Dashboard} replace />}
+          />
         </Route>
       </Routes>
     </BrowserRouter>

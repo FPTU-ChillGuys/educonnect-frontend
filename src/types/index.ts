@@ -5,52 +5,54 @@ export interface User {
   email: string;
   role: UserRole;
   avatar?: string;
+  teacherInfo?: TeacherInfo;
 }
 
-export type UserRole = "admin" | "teacher" | "parent";
+export type UserRole = "admin" | "teacher";
+
+export interface TeacherInfo {
+  employeeId: string;
+  subjects: Subject[];
+  homeroomClassId?: string; // Optional - only if they are a homeroom teacher
+  teachingClasses: string[]; // Classes they teach subjects in
+}
 
 // School Structure Types
 export interface Class {
   id: string;
   name: string;
-  classTeacherId: string;
   grade: number;
+  homeroomTeacherId?: string;
   academicYear: string;
   students: Student[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Student {
   id: string;
   name: string;
+  studentId: string;
   classId: string;
-  parentIds: string[];
+  dateOfBirth: string;
+  gender: "male" | "female";
+  address?: string;
+  parentContact?: string;
+  enrollmentDate: string;
+  status: "active" | "inactive" | "transferred";
 }
 
 export interface Subject {
   id: string;
   name: string;
   code: string;
-}
-
-export interface Teacher {
-  id: string;
-  userId: string;
-  name: string;
-  subjects: Subject[];
-  classId?: string; // ID of the class they are homeroom teacher for, if any
-}
-
-export interface Parent {
-  id: string;
-  userId: string;
-  name: string;
-  studentIds: string[];
+  description?: string;
+  grade: number;
 }
 
 // Timetable Types
 export interface TimeSlot {
   id: string;
-  day: Day;
   period: number;
   startTime: string;
   endTime: string;
@@ -62,15 +64,18 @@ export type Day =
   | "wednesday"
   | "thursday"
   | "friday"
-  | "saturday"
-  | "sunday";
+  | "saturday";
 
 export interface TimetableEntry {
   id: string;
   classId: string;
   subjectId: string;
   teacherId: string;
+  day: Day;
   timeSlotId: string;
+  room?: string;
+  academicYear: string;
+  semester: number;
 }
 
 // Record Book Types
@@ -82,49 +87,61 @@ export interface RecordBookEntry {
   teacherId: string;
   period: number;
   lessonContent: string;
+  teachingMethod?: string;
   studentAttitude?: string;
   absentStudentIds: string[];
+  lateStudentIds: string[];
   violationNotes?: string;
+  homeworkAssigned?: string;
   otherNotes?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface ClassTeacherNote {
+export interface HomeroomNote {
   id: string;
   classId: string;
+  teacherId: string;
   date: string;
+  type: "daily_reminder" | "weekly_summary" | "announcement" | "discipline";
+  title: string;
   content: string;
+  priority: "low" | "medium" | "high";
   createdAt: string;
   updatedAt: string;
 }
 
-// Communication Types
-export interface ChatMessage {
-  id: string;
-  senderId: string;
-  receiverId: string;
-  content: string;
-  timestamp: string;
-  isAI: boolean;
-  forwardedToTeacher: boolean;
+// Statistics Types
+export interface ClassStatistics {
+  classId: string;
+  className: string;
+  totalStudents: number;
+  averageAttendance: number;
+  disciplinaryIssues: number;
+  completedLessons: number;
+  totalLessons: number;
 }
 
-export interface Notification {
-  id: string;
-  title: string;
-  content: string;
-  senderId: string;
-  receiverId: string;
-  timestamp: string;
-  read: boolean;
-  type: "daily" | "weekly" | "urgent" | "general";
+export interface TeacherStatistics {
+  teacherId: string;
+  teacherName: string;
+  totalClasses: number;
+  totalLessons: number;
+  completedEntries: number;
+  pendingEntries: number;
+  homeroomClass?: string;
 }
 
-// AI Response Types
-export interface AIResponse {
-  content: string;
-  confidence: number;
-  sourcesUsed: string[];
-  needsHumanAttention: boolean;
+// Attendance Types
+export interface AttendanceRecord {
+  id: string;
+  studentId: string;
+  classId: string;
+  date: string;
+  status: "present" | "absent" | "late" | "excused";
+  period?: number;
+  subjectId?: string;
+  notes?: string;
+  recordedBy: string;
+  recordedAt: string;
 }

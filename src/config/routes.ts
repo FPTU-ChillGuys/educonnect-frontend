@@ -1,7 +1,11 @@
 export const ROUTES = {
-  HOME: "/",
-  LOGIN: "/login",
-  MAIN_LAYOUT: "/dashboard",
+  HomePage: "/",
+  Login: "/login",
+  Dashboard: "/dashboard",
+  Setting: "setting",
+  ClassManagement: "class-management",
+  TeacherManagement: "teacher-management",
+  TimeTable: "timetable",
 } as const;
 
 // Định nghĩa kiểu cho routes
