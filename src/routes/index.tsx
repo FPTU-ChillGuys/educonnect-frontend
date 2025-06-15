@@ -10,6 +10,7 @@ import ClassManagementPage from "../pages/admin/ClassManagementPage";
 import TeacherManagementPage from "../pages/admin/TeacherManagementPage";
 import TimetableManagementPage from "../pages/admin/TimeTableManagementPage";
 
+
 const AppRoute: FC = () => {
   return (
     <BrowserRouter>
@@ -45,7 +46,7 @@ const AppRoute: FC = () => {
         </Route>
       </Routes>
     </BrowserRouter>
-  );
-};
+  )
+}
 
-export default AppRoute;
+export default AppRoute 

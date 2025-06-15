@@ -94,7 +94,6 @@ const HomePage: FC = () => {
             </div>
           </div>
         </div>
-
         <div className="text-center">
           <p className="text-gray-600 mb-8">
             Đã có hơn 1000+ phụ huynh và giáo viên sử dụng EduConnect
@@ -104,9 +103,9 @@ const HomePage: FC = () => {
               Bắt đầu sử dụng ngay
             </Button>
           </Link>
+
         </div>
       </div>
-
       <footer className="bg-gray-50 py-8 mt-12">
         <div className="container mx-auto px-4 text-center text-gray-600">
           <p>
@@ -116,7 +115,7 @@ const HomePage: FC = () => {
         </div>
       </footer>
     </div>
-  );
-};
+  )
+}
 
-export default HomePage;
+export default HomePage 
