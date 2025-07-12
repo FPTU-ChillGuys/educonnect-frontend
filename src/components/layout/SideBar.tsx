@@ -9,6 +9,7 @@ import {
   LogOut,
   GraduationCap,
   School,
+  Shield,
 } from "lucide-react";
 import Avatar from "../ui/Avatar";
 import { ROUTES } from "../../config/routes";
@@ -49,6 +50,12 @@ const Sidebar: React.FC = () => {
 
     const roleSpecificItems = {
       admin: [
+        {
+          to: ROUTES.UserManagement,
+          icon: <Shield size={20} />,
+          label: "Quản lý người dùng",
+          disabled: false,
+        },
         {
           to: ROUTES.ClassManagement,
           icon: <School size={20} />,

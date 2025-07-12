@@ -1,10 +1,77 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "../../components/ui/Card";
+
+// CSS cho table cố định kích thước
+const tableStyles = `
+  .fixed-table {
+    table-layout: fixed;
+    width: 100%;
+    min-width: 900px;
+    border-collapse: collapse;
+  }
+  
+  .fixed-table th,
+  .fixed-table td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+  
+  .fixed-table th {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+    border-bottom: 2px solid #e5e7eb;
+    overflow: visible;
+    white-space: normal;
+    word-wrap: break-word;
+    min-height: 60px;
+    display: table-cell;
+    vertical-align: middle;
+    padding: 12px 16px;
+    font-weight: 600;
+    color: #374151;
+    text-align: left;
+    line-height: 1.4;
+  }
+  
+  .fixed-table th:hover {
+    background-color: #f8fafc;
+  }
+  
+  .table-container {
+    max-height: 650px;
+    overflow-y: auto;
+    border: none;
+    border-radius: 0;
+  }
+  
+  .fixed-table tr {
+    height: 64px;
+    min-height: 64px;
+  }
+  
+  .fixed-table tr:hover {
+    background-color: #f9fafb;
+  }
+  
+  .fixed-table td {
+    border-bottom: 1px solid #f3f4f6;
+  }
+  
+  @media (max-width: 1024px) {
+    .table-container {
+      max-height: 550px;
+    }
+  }
+`;
 import Button from "../../components/ui/Button";
 import {
   Plus,
@@ -18,6 +85,20 @@ import {
   Filter,
 } from "lucide-react";
 import { Class, Student } from "../../types/index";
+import { dashboardApi, classApi } from "../../services/api";
+
+type StudentApi = {
+  studentId: string;
+  fullName: string;
+  studentCode: string;
+  gender: string;
+  dateOfBirth: string;
+  className: string;
+  parentEmail: string;
+  parentPhoneNumber: string;
+  status : string;
+  // Thêm các trường khác nếu cần
+};
 
 const ClassManagementPage: React.FC = () => {
   const [selectedClass, setSelectedClass] = useState<string>("all");
@@ -26,169 +107,48 @@ const ClassManagementPage: React.FC = () => {
     useState<boolean>(false);
   const [showAddClassModal, setShowAddClassModal] = useState<boolean>(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [stats, setStats] = useState<{
+    totalClasses: number;
+    totalStudents: number;
+    totalHomeroomTeachers: number;
+    totalSubjectTeachers: number;
+  } | null>(null);
+  const [students, setStudents] = useState<StudentApi []>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const pageSize = 6;
 
   // Mock data for classes
-  const [classes] = useState<Class[]>([
-    {
-      id: "10A",
-      name: "10A",
-      grade: 10,
-      homeroomTeacherId: "2",
-      academicYear: "2024-2025",
-      students: [
-        {
-          id: "1",
-          name: "Nguyễn Văn An",
-          studentId: "HS001",
-          classId: "10A",
-          dateOfBirth: "2009-03-15",
-          gender: "male",
-          address: "123 Đường ABC, Quận 1, TP.HCM",
-          parentContact: "0901234567",
-          enrollmentDate: "2024-09-01",
-          status: "active",
-        },
-        {
-          id: "2",
-          name: "Trần Thị Bình",
-          studentId: "HS002",
-          classId: "10A",
-          dateOfBirth: "2009-05-20",
-          gender: "female",
-          address: "456 Đường DEF, Quận 2, TP.HCM",
-          parentContact: "0912345678",
-          enrollmentDate: "2024-09-01",
-          status: "active",
-        },
-        {
-          id: "3",
-          name: "Lê Minh Cường",
-          studentId: "HS003",
-          classId: "10A",
-          dateOfBirth: "2009-01-10",
-          gender: "male",
-          address: "789 Đường GHI, Quận 3, TP.HCM",
-          parentContact: "0923456789",
-          enrollmentDate: "2024-09-01",
-          status: "active",
-        },
-      ],
-      createdAt: "2024-08-15T00:00:00Z",
-      updatedAt: "2024-08-15T00:00:00Z",
-    },
-    {
-      id: "10B",
-      name: "10B",
-      grade: 10,
-      homeroomTeacherId: "3",
-      academicYear: "2024-2025",
-      students: [
-        {
-          id: "4",
-          name: "Phạm Thị Dung",
-          studentId: "HS004",
-          classId: "10B",
-          dateOfBirth: "2009-07-25",
-          gender: "female",
-          address: "321 Đường JKL, Quận 4, TP.HCM",
-          parentContact: "0934567890",
-          enrollmentDate: "2024-09-01",
-          status: "active",
-        },
-        {
-          id: "5",
-          name: "Hoàng Văn Em",
-          studentId: "HS005",
-          classId: "10B",
-          dateOfBirth: "2009-04-12",
-          gender: "male",
-          address: "654 Đường MNO, Quận 5, TP.HCM",
-          parentContact: "0945678901",
-          enrollmentDate: "2024-09-01",
-          status: "active",
-        },
-      ],
-      createdAt: "2024-08-15T00:00:00Z",
-      updatedAt: "2024-08-15T00:00:00Z",
-    },
-    {
-      id: "11A",
-      name: "11A",
-      grade: 11,
-      homeroomTeacherId: "2",
-      academicYear: "2024-2025",
-      students: [
-        {
-          id: "6",
-          name: "Vũ Thị Giang",
-          studentId: "HS006",
-          classId: "11A",
-          dateOfBirth: "2008-09-30",
-          gender: "female",
-          address: "987 Đường PQR, Quận 6, TP.HCM",
-          parentContact: "0956789012",
-          enrollmentDate: "2023-09-01",
-          status: "active",
-        },
-      ],
-      createdAt: "2024-08-15T00:00:00Z",
-      updatedAt: "2024-08-15T00:00:00Z",
-    },
-  ]);
+  const [classes] = useState<Class[]>([]);
 
-  // Get all students from all classes
-  const getAllStudents = (): Student[] => {
-    return classes.flatMap((cls) => cls.students);
-  };
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await dashboardApi.getAllStats();
+        setStats(data);
+      } catch (error) {
+        console.error("Lỗi khi lấy thống kê:", error);
+      } 
+    };
+    const fetchStudents = async () => {
+      try {
+        const res = await classApi.getStudents({ pageNumber: page, pageSize });
+        setStudents(res.data);
+        setTotalCount(res.totalCount);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách học sinh:", error);
+      }
+    };
 
-  // Filter students based on selected class and search term
-  const getFilteredStudents = (): Student[] => {
-    let students = getAllStudents();
+    fetchStudents();
+    fetchStats();
+  }, [page]);
 
-    if (selectedClass !== "all") {
-      students = students.filter(
-        (student) => student.classId === selectedClass
-      );
-    }
-
-    if (searchTerm) {
-      students = students.filter(
-        (student) =>
-          student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          student.studentId.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    return students;
-  };
-
-  const getClassStats = () => {
-    const totalStudents = getAllStudents().length;
-    const activeStudents = getAllStudents().filter(
-      (s) => s.status === "active"
-    ).length;
-    const totalClasses = classes.length;
-
-    return { totalStudents, activeStudents, totalClasses };
-  };
-
-  const handleEditStudent = (student: Student) => {
-    setEditingStudent(student);
-    setShowAddStudentModal(true);
-  };
-
-  const handleDeleteStudent = (studentId: string) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa học sinh này?")) {
-      // Implementation would go here
-      console.log("Delete student:", studentId);
-    }
-  };
-
-  const stats = getClassStats();
-  const filteredStudents = getFilteredStudents();
+  const filteredStudents = students;
 
   return (
     <div className="space-y-6">
+      <style>{tableStyles}</style>
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Quản lý lớp học</h1>
@@ -225,7 +185,7 @@ const ClassManagementPage: React.FC = () => {
               <div>
                 <p className="text-sm text-gray-600">Tổng số lớp</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {stats.totalClasses}
+                  {stats?.totalClasses !== null ? stats?.totalClasses : "Đang tải..."}
                 </p>
               </div>
               <div className="p-3 rounded-lg bg-blue-100">
@@ -241,7 +201,7 @@ const ClassManagementPage: React.FC = () => {
               <div>
                 <p className="text-sm text-gray-600">Tổng số học sinh</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {stats.totalStudents}
+                  {stats?.totalStudents !== null ? stats?.totalStudents : "Đang tải..."}
                 </p>
               </div>
               <div className="p-3 rounded-lg bg-green-100">
@@ -257,7 +217,7 @@ const ClassManagementPage: React.FC = () => {
               <div>
                 <p className="text-sm text-gray-600">Học sinh đang học</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {stats.activeStudents}
+                  {stats?.totalStudents !== null ? stats?.totalStudents : "Đang tải..."}
                 </p>
               </div>
               <div className="p-3 rounded-lg bg-teal-100">
@@ -336,117 +296,129 @@ const ClassManagementPage: React.FC = () => {
         {/* Student List */}
         <div className="lg:col-span-3">
           <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>
-                  Danh sách học sinh
-                  {selectedClass !== "all" && ` - Lớp ${selectedClass}`}
-                </CardTitle>
-                <span className="text-sm text-gray-500">
-                  {filteredStudents.length} học sinh
-                </span>
+            <CardContent className="p-0">
+              <div className="p-4 border-b border-gray-200">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Danh sách học sinh
+                    {selectedClass !== "all" && ` - Lớp ${selectedClass}`}
+                  </h3>
+                  <span className="text-sm text-gray-500">
+                    {filteredStudents.length} học sinh
+                  </span>
+                </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
+              <div className="table-container overflow-x-auto">
+                <table className="w-full table-fixed fixed-table">
                   <thead>
                     <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700 w-28">
                         Mã HS
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700 w-56">
                         Họ và tên
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700 w-24">
                         Lớp
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700 w-24">
                         Giới tính
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700 w-32">
                         Ngày sinh
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700 w-36">
                         Liên hệ PH
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700 w-28">
                         Trạng thái
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      <th className="text-left py-3 px-4 font-medium text-gray-700 w-24">
                         Thao tác
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredStudents.map((student) => (
-                      <tr
-                        key={student.id}
-                        className="border-b border-gray-100 hover:bg-gray-50"
-                      >
-                        <td className="py-3 px-4 font-medium text-blue-600">
-                          {student.studentId}
+                    {Array.from({ length: pageSize }).map((_, idx) => {
+                      const student = students[idx];
+                      if (student) {
+                        return (
+                          <tr key={student.studentId} className="border-b border-gray-100 hover:bg-gray-50 h-16">
+                           <td className="py-3 px-4 font-medium text-blue-600 truncate" title={student.studentCode}>
+                          {student.studentCode}
                         </td>
-                        <td className="py-3 px-4">{student.name}</td>
+                        <td className="py-3 px-4 truncate" title={student.fullName}>{student.fullName}</td>
                         <td className="py-3 px-4">
-                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                            {student.classId}
+                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium whitespace-nowrap" title={student.className}>
+                            {student.className}
                           </span>
                         </td>
                         <td className="py-3 px-4">
                           <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              student.gender === "male"
+                            className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                              student.gender === "Nam"
                                 ? "bg-blue-100 text-blue-800"
                                 : "bg-pink-100 text-pink-800"
                             }`}
+                            title={student.gender}
                           >
-                            {student.gender === "male" ? "Nam" : "Nữ"}
+                            {student.gender}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-600">
+                        <td className="py-3 px-4 text-sm text-gray-600 whitespace-nowrap">
                           {new Date(student.dateOfBirth).toLocaleDateString(
                             "vi-VN"
                           )}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-600">
-                          {student.parentContact}
+                        <td className="py-3 px-4 text-sm text-gray-600 truncate" title={student.parentPhoneNumber}>
+                          {student.parentPhoneNumber}
                         </td>
                         <td className="py-3 px-4">
                           <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              student.status === "active"
+                            className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                              student.status === "Active"
                                 ? "bg-green-100 text-green-800"
-                                : student.status === "inactive"
+                                : student.status === "Inactive"
                                 ? "bg-gray-100 text-gray-800"
                                 : "bg-yellow-100 text-yellow-800"
                             }`}
+                            title={student.status === "Active" ? "Đang học" : student.status === "Inactive" ? "Tạm nghỉ" : "Tạm nghỉ"}
                           >
-                            {student.status === "active"
+                            {student.status === "Active"
                               ? "Đang học"
-                              : student.status === "inactive"
+                              : student.status === "Inactive"
                               ? "Tạm nghỉ"
-                              : "Chuyển trường"}
+                              : "Tạm nghỉ"}
                           </span>
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex gap-2">
                             <button
-                              onClick={() => handleEditStudent(student)}
                               className="p-1 text-blue-600 hover:bg-blue-100 rounded"
+                              title="Chỉnh sửa"
                             >
                               <Edit2 size={16} />
                             </button>
                             <button
-                              onClick={() => handleDeleteStudent(student.id)}
                               className="p-1 text-red-600 hover:bg-red-100 rounded"
+                              title="Xóa"
                             >
                               <Trash2 size={16} />
                             </button>
                           </div>
                         </td>
-                      </tr>
-                    ))}
+                          </tr>
+                        );
+                      }
+                      // Dòng trống
+                      return (
+                        <tr key={`empty-${idx}`} className="h-16 border-b border-gray-100">
+                          <td colSpan={8} className="py-3 px-4 text-gray-400 text-center">
+                            &nbsp;
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
 
@@ -461,6 +433,22 @@ const ClassManagementPage: React.FC = () => {
                     </p>
                   </div>
                 )}
+              </div>
+
+              <div className="flex justify-end p-4 border-t border-gray-200">
+                <Button
+                  disabled={page === 1}
+                  onClick={() => setPage(page - 1)}
+                >
+                  Trang trước
+                </Button>
+                <span className="mx-2 flex items-center">Trang {page} / {Math.ceil(totalCount / pageSize)}</span>
+                <Button
+                  disabled={page >= Math.ceil(totalCount / pageSize)}
+                  onClick={() => setPage(page + 1)}
+                >
+                  Trang sau
+                </Button>
               </div>
             </CardContent>
           </Card>

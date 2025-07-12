@@ -5,6 +5,7 @@ export const ROUTES = {
   Setting: "setting",
   
   // Admin routes
+  UserManagement: "user-management",
   ClassManagement: "class-management",
   TeacherManagement: "teacher-management",
   TimeTable: "timetable",

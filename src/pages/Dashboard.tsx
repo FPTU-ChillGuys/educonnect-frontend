@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -16,28 +16,51 @@ import {
 import { useNavigate } from "react-router-dom";
 import Button from "../components/ui/Button";
 import { ROUTES } from "../config/routes";
+import { dashboardApi } from "../services/api";
 
 // TODO: Thay thế mock userRole này bằng dữ liệu thực tế từ API khi có
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const [stats, setStats] = useState<{
+    totalClasses: number;
+    totalStudents: number;
+    totalHomeroomTeachers: number;
+    totalSubjectTeachers: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await dashboardApi.getAllStats();
+        setStats(data);
+      } catch (error) {
+        console.error("Lỗi khi lấy thống kê:", error);
+      } 
+    };
+
+    fetchStats();
+  }, []);
+
+  
   const getStats = () => {
     return [
       {
         title: "Tổng số lớp",
-        value: "24",
+        value: stats?.totalClasses !== null ? stats?.totalClasses : "Đang tải...",
         icon: <School className="text-blue-500" />,
         change: "+2",
       },
+      
       {
         title: "Tổng số giáo viên",
-        value: "45",
+        value: stats ? stats.totalHomeroomTeachers + stats.totalSubjectTeachers : "Đang tải...",
         icon: <GraduationCap className="text-purple-500" />,
         change: "+3",
       },
       {
         title: "Tổng số học sinh",
-        value: "856",
+        value: stats?.totalStudents !== null ? stats?.totalStudents : "Đang tải...",
         icon: <Users className="text-teal-500" />,
         change: "+12",
       },

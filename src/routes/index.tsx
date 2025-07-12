@@ -11,6 +11,7 @@ import TeacherManagementPage from "../pages/admin/TeacherManagementPage";
 import TimetableManagementPage from "../pages/admin/TimeTableManagementPage";
 import TeacherSchedulePage from "../pages/teacher/TeacherSchedulePage";
 import TeacherClassPage from "../pages/teacher/TeacherClassPage";
+import UserManagementPage from "../pages/admin/UserManagement";
 
 
 // Kiểm tra xem người dùng đã đăng nhập chưa
@@ -106,6 +107,14 @@ const AppRoute: FC = () => {
           <Route path={ROUTES.Setting} element={<SettingPage />} />
 
           {/* Admin routes */}
+          <Route
+            path={ROUTES.UserManagement}
+            element={
+              <AdminRoute>
+                <UserManagementPage />
+              </AdminRoute>
+            }
+          />
           <Route
             path={ROUTES.ClassManagement}
             element={

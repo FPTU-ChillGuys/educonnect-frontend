@@ -5,9 +5,8 @@ const Header: React.FC = () => {
   const [notifications, setNotifications] = useState<
     { id: string; title: string; time: string }[]
   >([
-    { id: "1", title: "New message from Nguyễn Văn Anh", time: "5 min ago" },
-    { id: "2", title: "Record book updated for Class 10A", time: "1 hour ago" },
-    { id: "3", title: "Weekly report ready for review", time: "3 hours ago" },
+    { id: "1", title: "New message from AI Assistant", time: "5 min ago" },
+    { id: "2", title: "Weekly report ready for review", time: "3 hours ago" },
   ]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [user, setUser] = useState<Record<string, string> | null>(null);

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -19,6 +19,7 @@ import {
   Mail,
 } from "lucide-react";
 import { User, Subject } from "../../types";
+import { dashboardApi } from "../../services/api";
 
 const TeacherManagementPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -26,6 +27,9 @@ const TeacherManagementPage: React.FC = () => {
   const [showAddTeacherModal, setShowAddTeacherModal] =
     useState<boolean>(false);
   const [editingTeacher, setEditingTeacher] = useState<User | null>(null);
+  const [totalTeacher, setTotalTeacher] = useState<number | null>(null);
+  const [totalHomeroomTeacher, setTotalHomeroomTeacher] = useState<number | null>(null);
+  const [totalSubjectTeacher, setTotalSubjectTeacher] = useState<number | null>(null);
 
   // Mock data for teachers
   const [teachers] = useState<User[]>([
@@ -123,6 +127,41 @@ const TeacherManagementPage: React.FC = () => {
     { id: "it", name: "Tin học", code: "IT", grade: 10 },
   ];
 
+  useEffect(() => {
+    const fetchTotalHomeroomTeacher = async () => {
+      try{
+        const data = await dashboardApi.getTotalHomeroomTeacher();
+        setTotalHomeroomTeacher(data);
+      } catch (error) {
+        setTotalHomeroomTeacher(null);
+        console.log(error);
+      }
+    };
+    const fetchTotalSubjectTeacher = async () => {
+      try{
+        const data = await dashboardApi.getTotalSubjectTeacher();
+        setTotalSubjectTeacher(data);
+      } catch (error) {
+        setTotalSubjectTeacher(null);
+        console.log(error);
+      }
+    };
+    const fetchTotalTeacher = async () => {
+      try{
+        const homeroom = await dashboardApi.getTotalHomeroomTeacher();
+        const subject = await dashboardApi.getTotalSubjectTeacher();
+        setTotalTeacher(homeroom + subject);
+      } catch (error) {
+        setTotalTeacher(null);
+        console.log(error);
+      }
+    };
+  
+    fetchTotalTeacher();
+    fetchTotalHomeroomTeacher();
+    fetchTotalSubjectTeacher();
+  }, []);
+
   // Filter teachers based on search term and subject
   const getFilteredTeachers = (): User[] => {
     let filteredTeachers = teachers;
@@ -149,18 +188,6 @@ const TeacherManagementPage: React.FC = () => {
     return filteredTeachers;
   };
 
-  const getTeacherStats = () => {
-    const totalTeachers = teachers.length;
-    const homeroomTeachers = teachers.filter(
-      (t) => t.teacherInfo?.homeroomClassId
-    ).length;
-    const subjectTeachers = teachers.filter(
-      (t) => !t.teacherInfo?.homeroomClassId
-    ).length;
-
-    return { totalTeachers, homeroomTeachers, subjectTeachers };
-  };
-
   const handleEditTeacher = (teacher: User) => {
     setEditingTeacher(teacher);
     setShowAddTeacherModal(true);
@@ -172,7 +199,6 @@ const TeacherManagementPage: React.FC = () => {
     }
   };
 
-  const stats = getTeacherStats();
   const filteredTeachers = getFilteredTeachers();
 
   return (
@@ -208,7 +234,7 @@ const TeacherManagementPage: React.FC = () => {
               <div>
                 <p className="text-sm text-gray-600">Tổng số giáo viên</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {stats.totalTeachers}
+                  {totalTeacher !== null ? totalTeacher : "Đang tải..."}
                 </p>
               </div>
               <div className="p-3 rounded-lg bg-blue-100">
@@ -224,7 +250,7 @@ const TeacherManagementPage: React.FC = () => {
               <div>
                 <p className="text-sm text-gray-600">Giáo viên chủ nhiệm</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {stats.homeroomTeachers}
+                  {totalHomeroomTeacher !== null ? totalHomeroomTeacher : "Đang tải..."}
                 </p>
               </div>
               <div className="p-3 rounded-lg bg-green-100">
@@ -240,7 +266,7 @@ const TeacherManagementPage: React.FC = () => {
               <div>
                 <p className="text-sm text-gray-600">Giáo viên bộ môn</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {stats.subjectTeachers}
+                  {totalSubjectTeacher !== null ? totalSubjectTeacher : "Đang tải..."}
                 </p>
               </div>
               <div className="p-3 rounded-lg bg-purple-100">

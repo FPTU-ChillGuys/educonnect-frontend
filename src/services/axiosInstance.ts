@@ -16,4 +16,25 @@ axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config
 })
 
+// export const getTotalClass = async () => {
+//   const response = await axiosInstance.get("/api/class/count");
+//   return response.data;
+// };
+
+// export const getTotalStudent = async () => {
+//   const response = await axiosInstance.get("/api/student/count");
+//   return response.data;
+// };
+
+// export const getTotalHomeroomTeacher = async () => {
+//   const response = await axiosInstance.get("/api/user/count/homeroom-teachers");
+//   return response.data;
+// };
+
+// export const getTotalSubjectTeacher = async () => {
+//   const response = await axiosInstance.get("/api/user/count/subject-teachers");
+//   return response.data;
+// };
+
+
 export default axiosInstance 
