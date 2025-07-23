@@ -45,10 +45,13 @@ const LoginPage: React.FC = () => {
       const payload = JSON.parse(jsonPayload);
 
       // Lưu thông tin người dùng vào localStorage
+      const userId =
+        payload[
+          "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+        ];
+      localStorage.setItem("userId", userId);
       const userData = {
-        id: payload[
-          "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
-        ],
+        id: userId,
         name: payload[
           "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
         ].split("@")[0],
@@ -185,28 +188,42 @@ const LoginPage: React.FC = () => {
                   setError("");
                   setIsLoading(true);
                   try {
-                    const response = await axiosInstance.post("/api/auth/google-login", {
-                      idToken: credentialResponse.credential,
-                    });
+                    const response = await axiosInstance.post(
+                      "/api/auth/google-login",
+                      {
+                        idToken: credentialResponse.credential,
+                      }
+                    );
                     //luu vao storage
-                    localStorage.setItem("token", response.data.data.accessToken);
+                    localStorage.setItem(
+                      "token",
+                      response.data.data.accessToken
+                    );
                     const token = response.data.data.accessToken;
                     const base64Url = token.split(".")[1];
-                    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+                    const base64 = base64Url
+                      .replace(/-/g, "+")
+                      .replace(/_/g, "/");
                     const jsonPayload = decodeURIComponent(
                       atob(base64)
                         .split("")
                         .map(function (c) {
-                          return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+                          return (
+                            "%" +
+                            ("00" + c.charCodeAt(0).toString(16)).slice(-2)
+                          );
                         })
                         .join("")
                     );
                     const payload = JSON.parse(jsonPayload);
                     //luu thong tin nguoi dung vao storage
+                    const userId =
+                      payload[
+                        "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+                      ];
+                    localStorage.setItem("userId", userId);
                     const userData = {
-                      id: payload[
-                        "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
-                      ],
+                      id: userId,
                       name: payload[
                         "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
                       ].split("@")[0],
@@ -252,7 +269,8 @@ const LoginPage: React.FC = () => {
         </div>
 
         <div className="mt-8 text-center text-xs text-gray-500">
-          EduConnect © 2025 - AI Virtual Assistant for Parent-Teacher Communication
+          EduConnect © 2025 - AI Virtual Assistant for Parent-Teacher
+          Communication
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import axiosInstance from '../axiosInstance';
+import axiosInstance from "../axiosInstance";
 
 // Types cho Authentication
 export interface LoginRequest {
@@ -12,7 +12,7 @@ export interface LoginResponse {
     id: string;
     name: string;
     email: string;
-    role: 'admin' | 'teacher' | 'parent';
+    role: "admin" | "teacher" | "parent";
     avatar?: string;
   };
 }
@@ -21,7 +21,7 @@ export interface RegisterRequest {
   name: string;
   email: string;
   password: string;
-  role: 'admin' | 'teacher' | 'parent';
+  role: "admin" | "teacher" | "parent";
 }
 
 // API functions cho Authentication
@@ -33,8 +33,26 @@ export const authApi = {
   },
 
   // Đăng ký
-  register: async (userData: RegisterRequest): Promise<LoginResponse> => {
-    const response = await axiosInstance.post("/api/auth/register", userData);
+  register: async (userData: {
+    username: string;
+    fullName: string;
+    email: string;
+    password: string;
+    role: string;
+    clientUri: string;
+  }) => {
+    // Tách role ra khỏi body và đưa vào query params
+    const { role, ...bodyData } = userData;
+
+    const response = await axiosInstance.post(
+      `/api/auth/register?role=${role}`, // Role là query parameter
+      bodyData, // Body chỉ chứa username, fullName, email, password, clientUri
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
     return response.data;
   },
 
@@ -44,7 +62,7 @@ export const authApi = {
   },
 
   // Lấy thông tin người dùng hiện tại
-  getCurrentUser: async (): Promise<LoginResponse['user']> => {
+  getCurrentUser: async (): Promise<LoginResponse["user"]> => {
     const response = await axiosInstance.get("/api/auth/me");
     return response.data;
   },
@@ -54,4 +72,4 @@ export const authApi = {
     const response = await axiosInstance.post("/api/auth/refresh");
     return response.data;
   },
-}; 
+};

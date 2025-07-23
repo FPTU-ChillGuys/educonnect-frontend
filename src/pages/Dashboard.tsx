@@ -12,55 +12,35 @@ import {
   ChevronRight,
   School,
   GraduationCap,
+  Shield,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Button from "../components/ui/Button";
 import { ROUTES } from "../config/routes";
-import { dashboardApi } from "../services/api";
 
 // TODO: Thay thế mock userRole này bằng dữ liệu thực tế từ API khi có
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [stats, setStats] = useState<{
-    totalClasses: number;
-    totalStudents: number;
-    totalHomeroomTeachers: number;
-    totalSubjectTeachers: number;
-  } | null>(null);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const data = await dashboardApi.getAllStats();
-        setStats(data);
-      } catch (error) {
-        console.error("Lỗi khi lấy thống kê:", error);
-      } 
-    };
-
-    fetchStats();
-  }, []);
-
-  
   const getStats = () => {
     return [
       {
         title: "Tổng số lớp",
-        value: stats?.totalClasses !== null ? stats?.totalClasses : "Đang tải...",
+        value: "12",
         icon: <School className="text-blue-500" />,
         change: "+2",
       },
-      
+
       {
         title: "Tổng số giáo viên",
-        value: stats ? stats.totalHomeroomTeachers + stats.totalSubjectTeachers : "Đang tải...",
+        value: "11",
         icon: <GraduationCap className="text-purple-500" />,
         change: "+3",
       },
       {
         title: "Tổng số học sinh",
-        value: stats?.totalStudents !== null ? stats?.totalStudents : "Đang tải...",
+        value: "30",
         icon: <Users className="text-teal-500" />,
         change: "+12",
       },
@@ -96,6 +76,11 @@ const Dashboard: React.FC = () => {
 
   const getQuickActions = () => {
     return [
+      {
+        text: "Quản lý người dùng",
+        icon: <Shield size={16} />,
+        link: ROUTES.UserManagement,
+      },
       {
         text: "Thêm lớp học mới",
         icon: <School size={16} />,

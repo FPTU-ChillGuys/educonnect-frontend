@@ -145,3 +145,20 @@ export interface AttendanceRecord {
   recordedBy: string;
   recordedAt: string;
 }
+
+// Thêm type cho Class API response
+export interface ClassApi {
+  classId: string;
+  gradeLevel: string;
+  className: string;
+  academicYear: string;
+  homeroomTeacherId: string;
+  homeroomTeacherName: string;
+}
+
+export interface ClassApiResponse {
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  data: ClassApi[];
+}
