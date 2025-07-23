@@ -70,8 +70,12 @@ const LoginPage: React.FC = () => {
       };
       localStorage.setItem("user", JSON.stringify(userData));
 
-      // Chuyển hướng đến trang dashboard
-      navigate(ROUTES.Dashboard);
+      // Chuyển hướng dựa trên role của người dùng
+      if (userData.role === "admin") {
+        navigate(ROUTES.Dashboard);
+      } else {
+        navigate(`${ROUTES.Dashboard}/${ROUTES.TeacherSchedule}`);
+      }
     } catch (error) {
       // console.error("Login Error:", error);
       if (error instanceof AxiosError) {
@@ -241,7 +245,13 @@ const LoginPage: React.FC = () => {
                       )}`,
                     };
                     localStorage.setItem("user", JSON.stringify(userData));
-                    navigate(ROUTES.Dashboard);
+
+                    // Chuyển hướng dựa trên role của người dùng
+                    if (userData.role === "admin") {
+                      navigate(ROUTES.Dashboard);
+                    } else {
+                      navigate(`${ROUTES.Dashboard}/${ROUTES.TeacherSchedule}`);
+                    }
                   } catch (error) {
                     if (error instanceof AxiosError) {
                       setError(

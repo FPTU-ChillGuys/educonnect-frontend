@@ -39,17 +39,14 @@ const Sidebar: React.FC = () => {
   }, []);
 
   const getNavigationItems = () => {
-    const baseItems = [
-      {
-        to: ROUTES.Dashboard,
-        icon: <LayoutDashboard size={20} />,
-        label: "Dashboard",
-        disabled: false,
-      },
-    ];
-
     const roleSpecificItems = {
       admin: [
+        {
+          to: ROUTES.Dashboard,
+          icon: <LayoutDashboard size={20} />,
+          label: "Dashboard",
+          disabled: false,
+        },
         {
           to: ROUTES.UserManagement,
           icon: <Shield size={20} />,
@@ -110,8 +107,8 @@ const Sidebar: React.FC = () => {
     const roleKey = user?.role;
 
     return [
-      ...baseItems,
-      ...(roleKey && roleSpecificItems[roleKey as keyof typeof roleSpecificItems]
+      ...(roleKey &&
+      roleSpecificItems[roleKey as keyof typeof roleSpecificItems]
         ? roleSpecificItems[roleKey as keyof typeof roleSpecificItems]
         : []),
       ...commonItems,
@@ -155,7 +152,7 @@ const Sidebar: React.FC = () => {
     // Xóa token và thông tin người dùng khỏi localStorage
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    
+
     // Chuyển hướng về trang login
     navigate(ROUTES.Login);
   };
@@ -191,10 +188,14 @@ const Sidebar: React.FC = () => {
 
       <div className="p-4 border-t border-gray-200">
         <div className="flex items-center gap-3">
-          <Avatar src={user?.avatar} alt={user?.name || 'User'} status="online" />
+          <Avatar
+            src={user?.avatar}
+            alt={user?.name || "User"}
+            status="online"
+          />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 truncate">
-              {user?.name || 'User'}
+              {user?.name || "User"}
             </p>
             <p className="text-xs text-gray-500 truncate">
               {user?.role === "admin"

@@ -1,5 +1,11 @@
 import { FC } from "react";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router";
 import { ROUTES } from "../config/routes";
 import HomePage from "../pages/HomePage";
 import LoginPage from "../pages/LoginPage";
@@ -13,12 +19,11 @@ import TeacherSchedulePage from "../pages/teacher/TeacherSchedulePage";
 import TeacherClassPage from "../pages/teacher/TeacherClassPage";
 import UserManagementPage from "../pages/admin/UserManagement";
 
-
 // Kiểm tra xem người dùng đã đăng nhập chưa
 const isAuthenticated = () => {
   const token = localStorage.getItem("token");
   if (!token) return false;
-  
+
   try {
     // Kiểm tra token hết hạn
     const payload = JSON.parse(atob(token.split(".")[1]));
@@ -32,10 +37,12 @@ const isAuthenticated = () => {
 const getUserRole = () => {
   const token = localStorage.getItem("token");
   if (!token) return null;
-  
+
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
+    return payload[
+      "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+    ];
   } catch {
     return null;
   }
@@ -140,7 +147,7 @@ const AppRoute: FC = () => {
             }
           />
 
-          {/* Teacher routes */}
+          {/* Teacher routes - Admin cũng có thể truy cập */}
           <Route
             path={ROUTES.TeacherSchedule}
             element={
@@ -169,4 +176,4 @@ const AppRoute: FC = () => {
   );
 };
 
-export default AppRoute; 
+export default AppRoute;
