@@ -7,9 +7,11 @@ import { ROUTES } from "../config/routes";
 import axiosInstance from "../services/axiosInstance";
 import { AxiosError } from "axios";
 import { GoogleLogin } from "@react-oauth/google";
+import { useToast } from "../contexts/ToastContext";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -70,9 +72,18 @@ const LoginPage: React.FC = () => {
       };
       localStorage.setItem("user", JSON.stringify(userData));
 
+      // Hiển thị toast thành công
+      showToast(
+        "success",
+        "Đăng nhập thành công",
+        `Chào mừng ${userData.name}!`
+      );
+
       // Chuyển hướng dựa trên role của người dùng
       if (userData.role === "admin") {
         navigate(ROUTES.Dashboard);
+      } else if (userData.role === "parent") {
+        navigate(ROUTES.ParentMobileApp);
       } else {
         navigate(`${ROUTES.Dashboard}/${ROUTES.TeacherSchedule}`);
       }
@@ -246,9 +257,18 @@ const LoginPage: React.FC = () => {
                     };
                     localStorage.setItem("user", JSON.stringify(userData));
 
+                    // Hiển thị toast thành công
+                    showToast(
+                      "success",
+                      "Đăng nhập thành công",
+                      `Chào mừng ${userData.name}!`
+                    );
+
                     // Chuyển hướng dựa trên role của người dùng
                     if (userData.role === "admin") {
                       navigate(ROUTES.Dashboard);
+                    } else if (userData.role === "parent") {
+                      navigate(ROUTES.ParentMobileApp);
                     } else {
                       navigate(`${ROUTES.Dashboard}/${ROUTES.TeacherSchedule}`);
                     }

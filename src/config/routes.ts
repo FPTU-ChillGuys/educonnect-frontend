@@ -3,16 +3,19 @@ export const ROUTES = {
   Login: "/login",
   Dashboard: "/dashboard",
   Setting: "setting",
-  
+
   // Admin routes
   UserManagement: "user-management",
   ClassManagement: "class-management",
   TeacherManagement: "teacher-management",
   TimeTable: "timetable",
-  
+
   // Teacher routes
   TeacherSchedule: "teacher-schedule",
   TeacherClass: "teacher-class",
+
+  // Parent routes
+  ParentMobileApp: "/parent-mobile-app",
 } as const;
 
 // Định nghĩa kiểu cho routes

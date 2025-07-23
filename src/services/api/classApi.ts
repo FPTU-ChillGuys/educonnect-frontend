@@ -25,7 +25,7 @@ export interface ClassSession {
   teacherName: string;
   subjectId: string;
   subjectName: string;
-  periodId: string;
+  periodId?: string; // Optional vì API có thể không trả về
   periodNumber: number;
   date: string;
   lessonContent: string;
@@ -110,7 +110,7 @@ export interface UpdateClassSessionRequest {
   lessonContent: string;
   generalBehaviorNote: string;
   totalAbsentStudents: number;
-  isDeleted: boolean;
+  isDeleted?: boolean; // Optional vì sẽ được set mặc định trong API
 }
 
 export interface PeriodLookup {
@@ -246,6 +246,7 @@ export const classApi = {
       periodId: data.periodId,
       lessonContent: data.lessonContent,
       generalBehaviorNote: data.generalBehaviorNote || null,
+      totalAbsentStudents: data.totalAbsentStudents || 0,
     });
     return response.data;
   },
@@ -253,9 +254,24 @@ export const classApi = {
   updateClassSession: async (
     params: UpdateClassSessionRequest
   ): Promise<ApiResponse<ClassSession>> => {
+    const { sessionId, ...requestData } = params;
+    const requestPayload = {
+      ...requestData,
+      isDeleted: false, // Mặc định là false
+    };
+
     const response = await axiosInstance.put(
-      `/api/classsession/admin/${params.sessionId}`,
-      params
+      `/api/classsession/admin/${sessionId}`,
+      requestPayload
+    );
+    return response.data;
+  },
+
+  deleteClassSession: async (
+    sessionId: string
+  ): Promise<ApiResponse<{ message: string }>> => {
+    const response = await axiosInstance.delete(
+      `/api/classsession/hard/${sessionId}`
     );
     return response.data;
   },

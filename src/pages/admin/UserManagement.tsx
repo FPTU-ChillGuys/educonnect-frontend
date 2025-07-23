@@ -252,7 +252,9 @@ const UserManagementPage: React.FC = () => {
         email: formData.email.trim(),
         password: formData.password,
         role: formData.role,
-        clientUri: "https://localhost:7299/api/auth/verify-email",
+        // clientUri: "https://localhost:7299/api/auth/verify-email",
+        clientUri:
+          "https://educonnectapi20250716223316-b4a5e0e7afhwd8cz.indonesiacentral-01.azurewebsites.net/api/auth/verify-email",
       };
 
       await authApi.register(userData);

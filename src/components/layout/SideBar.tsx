@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import Avatar from "../ui/Avatar";
 import { ROUTES } from "../../config/routes";
+import { useToast } from "../../contexts/ToastContext";
+import { setLoggingOut } from "../../services/axiosInstance";
 
 interface SidebarLinkProps {
   to: string;
@@ -23,6 +25,7 @@ interface SidebarLinkProps {
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [user, setUser] = useState<Record<string, string> | null>(null);
 
   useEffect(() => {
@@ -79,18 +82,18 @@ const Sidebar: React.FC = () => {
           label: "Lịch giảng dạy",
           disabled: false,
         },
-        {
-          to: ROUTES.TeacherClass,
-          icon: <Users size={20} />,
-          label: "Lớp chủ nhiệm",
-          disabled: false,
-        },
-        {
-          to: "",
-          icon: <BookOpen size={20} />,
-          label: "Sổ đầu bài",
-          disabled: false,
-        },
+        // {
+        //   to: ROUTES.TeacherClass,
+        //   icon: <Users size={20} />,
+        //   label: "Lớp chủ nhiệm",
+        //   disabled: false,
+        // },
+        // {
+        //   to: "",
+        //   icon: <BookOpen size={20} />,
+        //   label: "Sổ đầu bài",
+        //   disabled: false,
+        // },
       ],
     };
 
@@ -149,12 +152,23 @@ const Sidebar: React.FC = () => {
   };
 
   const handleLogout = () => {
+    // Đánh dấu đang trong quá trình đăng xuất
+    setLoggingOut(true);
+
+    // Hiển thị toast đăng xuất thành công
+    showToast("success", "Đăng xuất thành công", "Hẹn gặp lại bạn!");
+
     // Xóa token và thông tin người dùng khỏi localStorage
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("userId");
 
-    // Chuyển hướng về trang login
-    navigate(ROUTES.Login);
+    // Delay một chút để cho các request đang pending kết thúc
+    setTimeout(() => {
+      setLoggingOut(false);
+      // Chuyển hướng về trang login
+      navigate(ROUTES.Login);
+    }, 100);
   };
 
   return (
@@ -202,6 +216,8 @@ const Sidebar: React.FC = () => {
                 ? "Administrator"
                 : user?.role === "teacher"
                 ? "Teacher"
+                : user?.role === "parent"
+                ? "Parent"
                 : "User"}
             </p>
           </div>

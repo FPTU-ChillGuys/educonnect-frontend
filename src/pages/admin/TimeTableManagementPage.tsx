@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
-import { Plus, Edit2, Trash2, Download, Calendar, Filter } from "lucide-react";
+import { Plus, Edit2, Trash2, Download, Filter } from "lucide-react";
 import {
   classApi,
   ClassLookup,
@@ -18,13 +18,7 @@ import { subjectApi, SubjectLookup } from "../../services/api/subjectApi";
 import { AxiosError } from "axios";
 import Modal from "../../components/ui/Modal";
 import { useToast } from "../../contexts/ToastContext";
-
-interface TimeSlot {
-  periodId: string;
-  periodNumber: number;
-  startTime: string;
-  endTime: string;
-}
+import { showErrorToastSafely } from "../../utils/errorUtils";
 
 interface AddSessionForm {
   teacherId: string;
@@ -32,6 +26,8 @@ interface AddSessionForm {
   lessonContent: string;
   generalBehaviorNote: string;
   totalAbsentStudents: number;
+  selectedDate: string; // Thêm field để quản lý ngày được chọn
+  selectedPeriodId: string; // Thêm field để quản lý tiết học được chọn
 }
 
 const TimetablePage: React.FC = () => {
@@ -42,7 +38,6 @@ const TimetablePage: React.FC = () => {
   const [selectedClassName, setSelectedClassName] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [loadingTimetable, setLoadingTimetable] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [classSessions, setClassSessions] = useState<ClassSession[]>([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [teachers, setTeachers] = useState<TeacherLookup[]>([]);
@@ -53,6 +48,9 @@ const TimetablePage: React.FC = () => {
     day: string;
   } | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
+
+  // Ref để track việc khởi tạo lần đầu
+  const isInitialized = useRef(false);
   const [selectedSession, setSelectedSession] = useState<ClassSession | null>(
     null
   );
@@ -62,25 +60,102 @@ const TimetablePage: React.FC = () => {
     lessonContent: "",
     generalBehaviorNote: "",
     totalAbsentStudents: 0,
+    selectedDate: "",
+    selectedPeriodId: "",
   });
   const [subjects, setSubjects] = useState<SubjectLookup[]>([]);
 
+  // Thêm state cho week filter
+  const [selectedWeek, setSelectedWeek] = useState<{
+    fromDate: string;
+    toDate: string;
+    label: string;
+  } | null>(null);
+
+  // Helper functions cho week management
+  const getWeekOptions = () => {
+    const weeks = [];
+    const today = new Date();
+
+    // Tạo 8 tuần: 4 tuần trước, tuần hiện tại, 3 tuần sau
+    for (let i = -4; i <= 3; i++) {
+      const weekStart = new Date(today);
+      weekStart.setDate(today.getDate() - today.getDay() + 1 + i * 7); // Thứ 2 của tuần
+
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 5); // Thứ 7 của tuần
+
+      const fromDate = weekStart.toLocaleDateString("en-US", {
+        month: "2-digit",
+        day: "2-digit",
+        year: "numeric",
+      });
+
+      const toDate = weekEnd.toLocaleDateString("en-US", {
+        month: "2-digit",
+        day: "2-digit",
+        year: "numeric",
+      });
+
+      weeks.push({
+        fromDate: weekStart.toISOString().split("T")[0],
+        toDate: weekEnd.toISOString().split("T")[0],
+        label: `${fromDate} - ${toDate}`,
+        value: `${weekStart.toISOString().split("T")[0]}_${
+          weekEnd.toISOString().split("T")[0]
+        }`,
+      });
+    }
+
+    return weeks;
+  };
+
+  // Khởi tạo tuần hiện tại
+  useEffect(() => {
+    const weeks = getWeekOptions();
+    const currentWeek = weeks[4]; // Tuần hiện tại ở vị trí 4
+    if (currentWeek) {
+      setSelectedWeek({
+        fromDate: currentWeek.fromDate,
+        toDate: currentWeek.toDate,
+        label: currentWeek.label,
+      });
+    }
+  }, []);
+
   const fetchClassSessions = React.useCallback(
-    async (classId: string) => {
+    async (classId: string, fromDate?: string, toDate?: string) => {
       try {
         setLoadingTimetable(true);
-        setError(null);
 
-        const response = await classApi.getClassSessions({
+        const params: {
+          ClassId: string;
+          PageSize: number;
+          FromDate?: string;
+          ToDate?: string;
+        } = {
           ClassId: classId,
           PageSize: 100,
-        });
+        };
+
+        // Thêm filter theo tuần nếu có
+        if (fromDate && toDate) {
+          params.FromDate = fromDate;
+          params.ToDate = toDate;
+        }
+
+        const response = await classApi.getClassSessions(params);
 
         if (response.success) {
           setClassSessions(response.data);
         } else {
           setClassSessions([]);
-          showToast("error", "Lỗi", "Đã xảy ra lỗi khi tải thời khóa biểu");
+          showErrorToastSafely(
+            new Error("API response unsuccessful"),
+            showToast,
+            "Lỗi",
+            "Đã xảy ra lỗi khi tải thời khóa biểu"
+          );
         }
       } catch (error) {
         const axiosError = error as AxiosError;
@@ -90,13 +165,19 @@ const TimetablePage: React.FC = () => {
         ) {
           setClassSessions([]);
         } else {
-          showToast("error", "Lỗi", "Đã xảy ra lỗi khi tải thời khóa biểu");
+          showErrorToastSafely(
+            error,
+            showToast,
+            "Lỗi",
+            "Đã xảy ra lỗi khi tải thời khóa biểu"
+          );
         }
       } finally {
         setLoadingTimetable(false);
       }
     },
-    [showToast]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [] // Loại bỏ showToast dependency
   );
 
   // Fetch periods
@@ -108,12 +189,18 @@ const TimetablePage: React.FC = () => {
           setPeriods(response.data);
         }
       } catch (error) {
-        showToast("error", "Lỗi", "Đã xảy ra lỗi khi tải danh sách tiết học");
+        showErrorToastSafely(
+          error,
+          showToast,
+          "Lỗi",
+          "Đã xảy ra lỗi khi tải danh sách tiết học"
+        );
       }
     };
 
     fetchPeriods();
-  }, [showToast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Loại bỏ showToast dependency
 
   // Fetch classes
   useEffect(() => {
@@ -123,28 +210,49 @@ const TimetablePage: React.FC = () => {
         const response = await classApi.getClassLookup();
         if (response.success) {
           setClasses(response.data);
-          if (response.data.length > 0) {
+          // Chỉ set selectedClassId nếu chưa khởi tạo lần đầu
+          if (response.data.length > 0 && !isInitialized.current) {
             const firstClass = response.data[0];
             setSelectedClassId(firstClass.classId);
             setSelectedClassName(firstClass.className);
-            await fetchClassSessions(firstClass.classId);
+            isInitialized.current = true; // Đánh dấu đã khởi tạo
+            // Chờ selectedWeek được set trước khi fetch
+            // Sẽ được gọi trong useEffect khác
           }
         } else {
-          showToast(
-            "error",
+          showErrorToastSafely(
+            new Error("API response unsuccessful"),
+            showToast,
             "Lỗi",
             response.message || "Không thể tải danh sách lớp"
           );
         }
       } catch (error) {
-        showToast("error", "Lỗi", "Đã xảy ra lỗi khi tải danh sách lớp");
+        showErrorToastSafely(
+          error,
+          showToast,
+          "Lỗi",
+          "Đã xảy ra lỗi khi tải danh sách lớp"
+        );
       } finally {
         setLoading(false);
       }
     };
 
     fetchClasses();
-  }, [showToast, fetchClassSessions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Loại bỏ showToast dependency
+
+  // Fetch class sessions when selectedWeek or selectedClassId changes
+  useEffect(() => {
+    if (selectedClassId && selectedWeek) {
+      fetchClassSessions(
+        selectedClassId,
+        selectedWeek.fromDate,
+        selectedWeek.toDate
+      );
+    }
+  }, [selectedClassId, selectedWeek, fetchClassSessions]);
 
   // Fetch teachers
   useEffect(() => {
@@ -155,12 +263,18 @@ const TimetablePage: React.FC = () => {
           setTeachers(response.data);
         }
       } catch (error) {
-        showToast("error", "Lỗi", "Đã xảy ra lỗi khi tải danh sách giáo viên");
+        showErrorToastSafely(
+          error,
+          showToast,
+          "Lỗi",
+          "Đã xảy ra lỗi khi tải danh sách giáo viên"
+        );
       }
     };
 
     fetchTeachers();
-  }, [showToast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Loại bỏ showToast dependency
 
   // Fetch subjects
   useEffect(() => {
@@ -171,19 +285,47 @@ const TimetablePage: React.FC = () => {
           setSubjects(response.data);
         }
       } catch (error) {
-        showToast("error", "Lỗi", "Đã xảy ra lỗi khi tải danh sách môn học");
+        showErrorToastSafely(
+          error,
+          showToast,
+          "Lỗi",
+          "Đã xảy ra lỗi khi tải danh sách môn học"
+        );
       }
     };
 
     fetchSubjects();
-  }, [showToast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Loại bỏ showToast dependency
 
   const handleClassChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedClass = classes.find((c) => c.classId === event.target.value);
     if (selectedClass) {
       setSelectedClassId(selectedClass.classId);
       setSelectedClassName(selectedClass.className);
-      fetchClassSessions(selectedClass.classId);
+      if (selectedWeek) {
+        fetchClassSessions(
+          selectedClass.classId,
+          selectedWeek.fromDate,
+          selectedWeek.toDate
+        );
+      }
+    }
+  };
+
+  const handleWeekChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const [fromDate, toDate] = event.target.value.split("_");
+    const weeks = getWeekOptions();
+    const selectedWeekOption = weeks.find(
+      (w) => w.value === event.target.value
+    );
+
+    if (selectedWeekOption) {
+      setSelectedWeek({
+        fromDate,
+        toDate,
+        label: selectedWeekOption.label,
+      });
     }
   };
 
@@ -207,17 +349,38 @@ const TimetablePage: React.FC = () => {
       periodNumber: period.periodNumber,
       day,
     });
+
+    // Set ngày mặc định cho add mode
+    const defaultDate = calculateDateFromDay(day);
+    setForm((prev) => ({
+      ...prev,
+      selectedDate: defaultDate.split("T")[0], // Lấy phần ngày từ ISO string
+      selectedPeriodId: period.periodId, // Set periodId cho add mode
+    }));
+
     setIsAddModalOpen(true);
   };
 
   const handleEditClick = (session: ClassSession) => {
-    setSelectedSession(session);
+    // Tìm periodId từ periodNumber
+    const period = periods.find((p) => p.periodNumber === session.periodNumber);
+    if (!period) {
+      showToast("error", "Lỗi", "Không tìm thấy thông tin tiết học");
+      return;
+    }
+
+    setSelectedSession({
+      ...session,
+      periodId: period.periodId, // Đảm bảo có periodId từ lookup
+    });
     setForm({
-      teacherId: "", // Không set mặc định là ID cũ
-      subjectId: "",
+      teacherId: session.teacherId, // Set mặc định là ID giáo viên hiện tại
+      subjectId: session.subjectId, // Set mặc định là ID môn học hiện tại
       lessonContent: session.lessonContent || "",
       generalBehaviorNote: session.generalBehaviorNote || "",
       totalAbsentStudents: session.totalAbsentStudents || 0,
+      selectedDate: session.date.split("T")[0], // Lấy phần ngày từ ISO string
+      selectedPeriodId: period.periodId, // Set periodId hiện tại
     });
     setIsEditMode(true);
     setIsAddModalOpen(true);
@@ -233,28 +396,34 @@ const TimetablePage: React.FC = () => {
   };
 
   const calculateDateFromDay = (day: string): string => {
-    const dayMap: { [key: string]: number } = {
-      "Thứ Hai": 1,
-      "Thứ Ba": 2,
-      "Thứ Tư": 3,
-      "Thứ Năm": 4,
-      "Thứ Sáu": 5,
-      "Thứ Bảy": 6,
-      "Chủ Nhật": 0,
-    };
-
-    const today = new Date();
-    const currentDayOfWeek = today.getDay();
-    const targetDayOfWeek = dayMap[day];
-
-    // Tính số ngày cần thêm để đến ngày mục tiêu trong tuần tới
-    let daysToAdd = targetDayOfWeek - currentDayOfWeek;
-    if (daysToAdd <= 0) {
-      daysToAdd += 7; // Luôn lấy ngày của tuần tới
+    if (!selectedWeek) {
+      // Fallback nếu không có tuần được chọn
+      const today = new Date();
+      return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(
+        2,
+        "0"
+      )}-${String(today.getDate()).padStart(2, "0")}T00:00:00`;
     }
 
-    const targetDate = new Date(today);
-    targetDate.setDate(today.getDate() + daysToAdd + 7); // Thêm 7 ngày để đảm bảo luôn lấy ngày trong tương lai
+    const dayMap: { [key: string]: number } = {
+      "Thứ Hai": 0, // Thứ 2 là ngày đầu tuần (offset 0)
+      "Thứ Ba": 1, // Thứ 3 là ngày thứ 2 (offset 1)
+      "Thứ Tư": 2, // Thứ 4 là ngày thứ 3 (offset 2)
+      "Thứ Năm": 3, // Thứ 5 là ngày thứ 4 (offset 3)
+      "Thứ Sáu": 4, // Thứ 6 là ngày thứ 5 (offset 4)
+      "Thứ Bảy": 5, // Thứ 7 là ngày thứ 6 (offset 5)
+    };
+
+    const dayOffset = dayMap[day];
+    if (dayOffset === undefined) {
+      // Fallback nếu không tìm thấy thứ
+      return selectedWeek.fromDate + "T00:00:00";
+    }
+
+    // Tính ngày chính xác trong tuần đã chọn
+    const weekStartDate = new Date(selectedWeek.fromDate);
+    const targetDate = new Date(weekStartDate);
+    targetDate.setDate(weekStartDate.getDate() + dayOffset);
 
     // Format date as YYYY-MM-DDT00:00:00
     return `${targetDate.getFullYear()}-${String(
@@ -269,10 +438,18 @@ const TimetablePage: React.FC = () => {
     if (!selectedPeriod) return;
 
     try {
-      const date = calculateDateFromDay(selectedPeriod.day);
-
       if (!form.teacherId) {
         showToast("error", "Lỗi", "Vui lòng chọn giáo viên");
+        return;
+      }
+
+      if (!form.selectedDate) {
+        showToast("error", "Lỗi", "Vui lòng chọn ngày");
+        return;
+      }
+
+      if (!form.selectedPeriodId) {
+        showToast("error", "Lỗi", "Vui lòng chọn tiết học");
         return;
       }
 
@@ -289,8 +466,8 @@ const TimetablePage: React.FC = () => {
         classId: currentClassId,
         teacherId: selectedTeacher.userId,
         subjectId: form.subjectId,
-        periodId: selectedPeriod.periodId,
-        date: date,
+        periodId: form.selectedPeriodId || selectedPeriod.periodId, // Sử dụng selectedPeriodId hoặc fallback
+        date: form.selectedDate + "T00:00:00", // Sử dụng ngày được chọn
         lessonContent: form.lessonContent,
         generalBehaviorNote: form.generalBehaviorNote,
         totalAbsentStudents: form.totalAbsentStudents,
@@ -299,8 +476,18 @@ const TimetablePage: React.FC = () => {
       if (response.success) {
         showToast("success", "Thành công", "Thêm tiết học thành công");
         setIsAddModalOpen(false);
-        // Fetch lại thời khóa biểu của lớp hiện tại
-        await fetchClassSessions(currentClassId);
+        // Fetch lại thời khóa biểu của lớp hiện tại với tuần đã chọn
+        // Giữ nguyên lớp hiện tại để không bị reset về lớp mặc định
+        const classIdToUse = selectedClassId;
+        if (selectedWeek) {
+          await fetchClassSessions(
+            classIdToUse,
+            selectedWeek.fromDate,
+            selectedWeek.toDate
+          );
+        } else {
+          await fetchClassSessions(classIdToUse);
+        }
         resetForm();
       } else {
         showToast("error", "Lỗi", response.message || "Không thể tạo tiết học");
@@ -316,22 +503,28 @@ const TimetablePage: React.FC = () => {
   };
 
   const handleUpdate = async () => {
-    console.log("Current Selected Session:", selectedSession);
-    console.log("Current Form Data:", form);
-
     if (!selectedSession) {
       showToast("error", "Lỗi", "Không tìm thấy thông tin tiết học");
       return;
     }
 
     if (!selectedSession.classSessionId) {
-      console.log("Session ID is missing:", selectedSession);
       showToast("error", "Lỗi", "Không tìm thấy ID tiết học");
       return;
     }
 
     if (!form.teacherId || !form.subjectId || !form.lessonContent) {
       showToast("error", "Lỗi", "Vui lòng điền đầy đủ thông tin bắt buộc");
+      return;
+    }
+
+    if (isEditMode && !form.selectedDate) {
+      showToast("error", "Lỗi", "Vui lòng chọn ngày cho tiết học");
+      return;
+    }
+
+    if (isEditMode && !form.selectedPeriodId) {
+      showToast("error", "Lỗi", "Vui lòng chọn tiết học");
       return;
     }
 
@@ -350,30 +543,46 @@ const TimetablePage: React.FC = () => {
         return;
       }
 
-      // Log thông tin request
+      // Đảm bảo có periodId (từ lookup hoặc từ session gốc)
+      const periodId =
+        selectedSession.periodId ||
+        periods.find((p) => p.periodNumber === selectedSession.periodNumber)
+          ?.periodId;
+
+      if (!periodId) {
+        showToast("error", "Lỗi", "Không tìm thấy thông tin tiết học");
+        return;
+      }
+
+      // Chuẩn bị dữ liệu request - sử dụng ngày được chọn
       const requestData = {
         sessionId: selectedSession.classSessionId,
         classId: selectedSession.classId, // Sử dụng classId từ session
         teacherId: form.teacherId,
         subjectId: form.subjectId,
-        periodId: selectedSession.periodId,
-        date: selectedSession.date,
+        periodId: form.selectedPeriodId, // Sử dụng periodId được chọn từ form
+        date: form.selectedDate + "T00:00:00", // Sử dụng ngày được chọn với định dạng ISO
         lessonContent: form.lessonContent,
         totalAbsentStudents: form.totalAbsentStudents,
         generalBehaviorNote: form.generalBehaviorNote || "",
-        isDeleted: false,
       };
-
-      console.log("Update Session Request Data:", requestData);
-      console.log("Selected Teacher:", selectedTeacher);
-      console.log("Selected Subject:", selectedSubject);
 
       const response = await classApi.updateClassSession(requestData);
 
       if (response.success) {
         showToast("success", "Thành công", "Cập nhật tiết học thành công");
         setIsAddModalOpen(false);
-        await fetchClassSessions(selectedClassId);
+        // Giữ nguyên lớp hiện tại để không bị reset về lớp mặc định
+        const classIdToRefresh = selectedSession?.classId || selectedClassId;
+        if (selectedWeek) {
+          await fetchClassSessions(
+            classIdToRefresh,
+            selectedWeek.fromDate,
+            selectedWeek.toDate
+          );
+        } else {
+          await fetchClassSessions(classIdToRefresh);
+        }
         resetForm();
       } else {
         showToast(
@@ -392,15 +601,65 @@ const TimetablePage: React.FC = () => {
     }
   };
 
-  // Kiểm tra thay đổi: nếu chọn lại ID mới hoặc sửa nội dung
+  const handleDelete = async (session: ClassSession) => {
+    if (!session.classSessionId) {
+      showToast("error", "Lỗi", "Không tìm thấy ID tiết học");
+      return;
+    }
+
+    // Hiển thị confirm dialog
+    const isConfirmed = window.confirm(
+      `Bạn có chắc chắn muốn xóa tiết học "${session.subjectName}" - Tiết ${
+        session.periodNumber
+      } vào ngày ${new Date(session.date).toLocaleDateString("vi-VN")}?`
+    );
+
+    if (!isConfirmed) {
+      return;
+    }
+
+    try {
+      const response = await classApi.deleteClassSession(
+        session.classSessionId
+      );
+
+      if (response.success) {
+        showToast("success", "Thành công", "Xóa tiết học thành công");
+        // Fetch lại thời khóa biểu
+        if (selectedWeek) {
+          await fetchClassSessions(
+            selectedClassId,
+            selectedWeek.fromDate,
+            selectedWeek.toDate
+          );
+        } else {
+          await fetchClassSessions(selectedClassId);
+        }
+      } else {
+        showToast("error", "Lỗi", response.message || "Không thể xóa tiết học");
+      }
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response?.data) {
+        showToast("error", "Lỗi", JSON.stringify(axiosError.response.data));
+      } else {
+        showToast("error", "Lỗi", "Đã xảy ra lỗi khi xóa tiết học");
+      }
+    }
+  };
+
+  // Kiểm tra thay đổi: so sánh với giá trị gốc
   const hasFormChanged = () => {
     if (!selectedSession) return false;
     return (
-      (form.teacherId && form.teacherId !== selectedSession.teacherId) ||
-      (form.subjectId && form.subjectId !== selectedSession.subjectId) ||
-      form.lessonContent !== selectedSession.lessonContent ||
-      form.generalBehaviorNote !== selectedSession.generalBehaviorNote ||
-      form.totalAbsentStudents !== selectedSession.totalAbsentStudents
+      form.teacherId !== selectedSession.teacherId ||
+      form.subjectId !== selectedSession.subjectId ||
+      form.lessonContent !== (selectedSession.lessonContent || "") ||
+      form.generalBehaviorNote !==
+        (selectedSession.generalBehaviorNote || "") ||
+      form.totalAbsentStudents !== (selectedSession.totalAbsentStudents || 0) ||
+      form.selectedDate !== selectedSession.date.split("T")[0] || // So sánh ngày được chọn
+      form.selectedPeriodId !== (selectedSession.periodId || "") // So sánh tiết học được chọn
     );
   };
 
@@ -411,6 +670,8 @@ const TimetablePage: React.FC = () => {
       lessonContent: "",
       generalBehaviorNote: "",
       totalAbsentStudents: 0,
+      selectedDate: "",
+      selectedPeriodId: "",
     });
     setSelectedSession(null);
     setIsEditMode(false);
@@ -476,24 +737,23 @@ const TimetablePage: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Học kỳ
+                Tuần học
               </label>
               <div className="relative">
-                <select className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                  <option value="1">Học kỳ 1</option>
-                  <option value="2">Học kỳ 2</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Năm học
-              </label>
-              <div className="relative">
-                <select className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                  <option value="2024-2025">2024-2025</option>
-                  <option value="2025-2026">2025-2026</option>
+                <select
+                  value={
+                    selectedWeek
+                      ? `${selectedWeek.fromDate}_${selectedWeek.toDate}`
+                      : ""
+                  }
+                  onChange={handleWeekChange}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {getWeekOptions().map((week) => (
+                    <option key={week.value} value={week.value}>
+                      {week.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -504,14 +764,21 @@ const TimetablePage: React.FC = () => {
           <Card className="h-full">
             <CardHeader className="bg-blue-50">
               <div className="flex justify-between items-center">
-                <CardTitle>
-                  Thời khóa biểu lớp {selectedClassName}
-                  {classSessions.length === 0 && !loadingTimetable && (
-                    <span className="text-sm text-gray-500 ml-2">
-                      (Chưa có thời khóa biểu)
-                    </span>
+                <div>
+                  <CardTitle>
+                    Thời khóa biểu lớp {selectedClassName}
+                    {classSessions.length === 0 && !loadingTimetable && (
+                      <span className="text-sm text-gray-500 ml-2">
+                        (Chưa có thời khóa biểu)
+                      </span>
+                    )}
+                  </CardTitle>
+                  {selectedWeek && (
+                    <div className="text-sm text-gray-600 mt-1">
+                      Tuần: {selectedWeek.label}
+                    </div>
                   )}
-                </CardTitle>
+                </div>
                 <span className="text-sm text-gray-500">
                   Học kỳ 1 - Năm học 2024-2025
                 </span>
@@ -602,7 +869,10 @@ const TimetablePage: React.FC = () => {
                                       >
                                         <Edit2 size={14} />
                                       </button>
-                                      <button className="p-1 bg-red-100 text-red-700 rounded hover:bg-red-200">
+                                      <button
+                                        className="p-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
+                                        onClick={() => handleDelete(slot)}
+                                      >
                                         <Trash2 size={14} />
                                       </button>
                                     </div>
@@ -649,19 +919,172 @@ const TimetablePage: React.FC = () => {
         }
       >
         <div className="space-y-4">
+          {!isEditMode && selectedPeriod && (
+            <div className="bg-blue-50 p-3 rounded-md">
+              <div className="text-sm text-blue-700">
+                <b>Ngày được chọn tự động:</b>{" "}
+                {new Date(
+                  calculateDateFromDay(selectedPeriod.day)
+                ).toLocaleDateString("vi-VN", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </div>
+            </div>
+          )}
+          {!isEditMode && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Chọn ngày <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                name="selectedDate"
+                value={form.selectedDate}
+                onChange={handleFormChange}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+              <div className="text-xs text-gray-500 mt-1">
+                Ngày được chọn:{" "}
+                {form.selectedDate
+                  ? new Date(
+                      form.selectedDate + "T00:00:00"
+                    ).toLocaleDateString("vi-VN", {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : "Chưa chọn ngày"}
+              </div>
+            </div>
+          )}
+          {!isEditMode && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Chọn tiết học <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="selectedPeriodId"
+                value={form.selectedPeriodId}
+                onChange={handleFormChange}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
+                <option value="">-- Chọn tiết học --</option>
+                {periods.map((period) => (
+                  <option key={period.periodId} value={period.periodId}>
+                    Tiết {period.periodNumber} ({period.startTime} -{" "}
+                    {period.endTime})
+                    {selectedPeriod &&
+                      period.periodId === selectedPeriod.periodId &&
+                      " (Được chọn)"}
+                  </option>
+                ))}
+              </select>
+              <div className="text-xs text-gray-500 mt-1">
+                Tiết được chọn:{" "}
+                {form.selectedPeriodId
+                  ? (() => {
+                      const selectedPeriod = periods.find(
+                        (p) => p.periodId === form.selectedPeriodId
+                      );
+                      return selectedPeriod
+                        ? `Tiết ${selectedPeriod.periodNumber} (${selectedPeriod.startTime} - ${selectedPeriod.endTime})`
+                        : "Không tìm thấy tiết học";
+                    })()
+                  : "Chưa chọn tiết học"}
+              </div>
+            </div>
+          )}
           {isEditMode && (
-            <>
-              <div className="text-sm text-gray-600 mb-2">
-                <b>Giáo viên hiện tại:</b> {selectedSession?.teacherName}
+            <div className="bg-green-50 p-3 rounded-md">
+              <div className="text-sm text-green-700">
+                <b>Ngày tiết học hiện tại:</b>{" "}
+                {new Date(selectedSession?.date || "").toLocaleDateString(
+                  "vi-VN",
+                  {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  }
+                )}
               </div>
-              <div className="text-sm text-gray-600 mb-2">
-                <b>Môn học hiện tại:</b> {selectedSession?.subjectName}
+            </div>
+          )}
+          {isEditMode && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Chọn ngày mới <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                name="selectedDate"
+                value={form.selectedDate}
+                onChange={handleFormChange}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+              <div className="text-xs text-gray-500 mt-1">
+                Ngày được chọn:{" "}
+                {form.selectedDate
+                  ? new Date(
+                      form.selectedDate + "T00:00:00"
+                    ).toLocaleDateString("vi-VN", {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : "Chưa chọn ngày"}
               </div>
-            </>
+            </div>
+          )}
+          {isEditMode && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Chọn tiết học mới <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="selectedPeriodId"
+                value={form.selectedPeriodId}
+                onChange={handleFormChange}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
+                <option value="">-- Chọn tiết học --</option>
+                {periods.map((period) => (
+                  <option key={period.periodId} value={period.periodId}>
+                    Tiết {period.periodNumber} ({period.startTime} -{" "}
+                    {period.endTime})
+                    {period.periodId === selectedSession?.periodId &&
+                      " (Hiện tại)"}
+                  </option>
+                ))}
+              </select>
+              <div className="text-xs text-gray-500 mt-1">
+                Tiết được chọn:{" "}
+                {form.selectedPeriodId
+                  ? (() => {
+                      const selectedPeriod = periods.find(
+                        (p) => p.periodId === form.selectedPeriodId
+                      );
+                      return selectedPeriod
+                        ? `Tiết ${selectedPeriod.periodNumber} (${selectedPeriod.startTime} - ${selectedPeriod.endTime})`
+                        : "Không tìm thấy tiết học";
+                    })()
+                  : "Chưa chọn tiết học"}
+              </div>
+            </div>
           )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Chọn giáo viên mới (nếu muốn đổi)
+              {isEditMode ? "Giáo viên" : "Chọn giáo viên"}{" "}
+              <span className="text-red-500">*</span>
             </label>
             <select
               name="teacherId"
@@ -669,17 +1092,21 @@ const TimetablePage: React.FC = () => {
               onChange={handleFormChange}
               className="w-full p-2 border border-gray-300 rounded-md"
             >
-              <option value="">-- Không đổi --</option>
+              {!isEditMode && <option value="">-- Chọn giáo viên --</option>}
               {teachers.map((teacher) => (
                 <option value={teacher.userId} key={teacher.userId}>
                   {teacher.fullName}
+                  {isEditMode &&
+                    teacher.userId === selectedSession?.teacherId &&
+                    " (Hiện tại)"}
                 </option>
               ))}
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Chọn môn học mới (nếu muốn đổi)
+              {isEditMode ? "Môn học" : "Chọn môn học"}{" "}
+              <span className="text-red-500">*</span>
             </label>
             <select
               name="subjectId"
@@ -687,10 +1114,13 @@ const TimetablePage: React.FC = () => {
               onChange={handleFormChange}
               className="w-full p-2 border border-gray-300 rounded-md"
             >
-              <option value="">-- Không đổi --</option>
+              {!isEditMode && <option value="">-- Chọn môn học --</option>}
               {subjects.map((subject) => (
                 <option value={subject.subjectId} key={subject.subjectId}>
                   {subject.subjectName}
+                  {isEditMode &&
+                    subject.subjectId === selectedSession?.subjectId &&
+                    " (Hiện tại)"}
                 </option>
               ))}
             </select>
@@ -755,7 +1185,11 @@ const TimetablePage: React.FC = () => {
               disabled={
                 isEditMode
                   ? !hasFormChanged()
-                  : !form.teacherId || !form.subjectId || !form.lessonContent
+                  : !form.teacherId ||
+                    !form.subjectId ||
+                    !form.lessonContent ||
+                    !form.selectedDate ||
+                    !form.selectedPeriodId
               }
             >
               {isEditMode ? "Cập nhật" : "Thêm"}

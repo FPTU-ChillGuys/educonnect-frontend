@@ -7,8 +7,6 @@ import {
 } from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import {
-  Edit2,
-  Trash2,
   Search,
   Users,
   GraduationCap,
@@ -27,9 +25,6 @@ const TeacherManagementPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [searchInput, setSearchInput] = useState<string>("");
   const [selectedSubject, setSelectedSubject] = useState<string>("all");
-  const [showAddTeacherModal, setShowAddTeacherModal] =
-    useState<boolean>(false);
-  const [editingTeacher, setEditingTeacher] = useState<User | null>(null);
 
   // State cho thời khóa biểu
   const [showTimetableModal, setShowTimetableModal] = useState<boolean>(false);
@@ -136,17 +131,6 @@ const TeacherManagementPage: React.FC = () => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     return filtered.slice(startIndex, endIndex);
-  };
-
-  const handleEditTeacher = (teacher: User) => {
-    setEditingTeacher(teacher);
-    setShowAddTeacherModal(true);
-  };
-
-  const handleDeleteTeacher = (teacherId: string) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa giáo viên này?")) {
-      console.log("Delete teacher:", teacherId);
-    }
   };
 
   // Function để xem thời khóa biểu của giáo viên
@@ -378,20 +362,6 @@ const TeacherManagementPage: React.FC = () => {
                               >
                                 <Calendar size={14} />
                               </button>
-                              <button
-                                onClick={() => handleEditTeacher(teacher)}
-                                className="p-1 text-blue-600 hover:bg-blue-100 rounded"
-                                title="Chỉnh sửa"
-                              >
-                                <Edit2 size={14} />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteTeacher(teacher.id)}
-                                className="p-1 text-red-600 hover:bg-red-100 rounded"
-                                title="Xóa"
-                              >
-                                <Trash2 size={14} />
-                              </button>
                             </div>
                           </div>
 
@@ -549,141 +519,6 @@ const TeacherManagementPage: React.FC = () => {
           )}
         </div>
       </div>
-
-      {/* Add/Edit Teacher Modal */}
-      {showAddTeacherModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">
-              {editingTeacher ? "Chỉnh sửa giáo viên" : "Thêm giáo viên mới"}
-            </h3>
-
-            <form className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Mã giáo viên <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="GV001"
-                    defaultValue={editingTeacher?.teacherInfo?.employeeId}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Họ và tên <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Nguyễn Văn An"
-                    defaultValue={editingTeacher?.name}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="teacher@educonnect.com"
-                    defaultValue={editingTeacher?.email}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Lớp chủ nhiệm
-                  </label>
-                  <select
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    defaultValue={
-                      editingTeacher?.teacherInfo?.homeroomClassId || ""
-                    }
-                  >
-                    <option value="">Không làm chủ nhiệm</option>
-                    <option value="10A">Lớp 10A</option>
-                    <option value="10B">Lớp 10B</option>
-                    <option value="11A">Lớp 11A</option>
-                    <option value="11B">Lớp 11B</option>
-                    <option value="12A">Lớp 12A</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Môn giảng dạy <span className="text-red-500">*</span>
-                </label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-32 overflow-y-auto border border-gray-300 rounded-md p-3">
-                  {availableSubjects.map((subject) => (
-                    <label key={subject.id} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        className="mr-2"
-                        defaultChecked={editingTeacher?.teacherInfo?.subjects.some(
-                          (s) => s.id === subject.id
-                        )}
-                      />
-                      <span className="text-sm">{subject.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Lớp giảng dạy <span className="text-red-500">*</span>
-                </label>
-                <div className="grid grid-cols-3 md:grid-cols-5 gap-2 border border-gray-300 rounded-md p-3">
-                  {[
-                    "10A",
-                    "10B",
-                    "10C",
-                    "11A",
-                    "11B",
-                    "11C",
-                    "12A",
-                    "12B",
-                    "12C",
-                  ].map((classId) => (
-                    <label key={classId} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        className="mr-2"
-                        defaultChecked={editingTeacher?.teacherInfo?.teachingClasses.includes(
-                          classId
-                        )}
-                      />
-                      <span className="text-sm">{classId}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </form>
-
-            <div className="flex justify-end gap-2 mt-6">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowAddTeacherModal(false);
-                  setEditingTeacher(null);
-                }}
-              >
-                Hủy
-              </Button>
-              <Button variant="primary">
-                {editingTeacher ? "Cập nhật" : "Thêm mới"}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Timetable Modal */}
       {showTimetableModal && selectedTeacherForTimetable && (

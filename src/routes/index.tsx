@@ -18,6 +18,7 @@ import TimetableManagementPage from "../pages/admin/TimeTableManagementPage";
 import TeacherSchedulePage from "../pages/teacher/TeacherSchedulePage";
 import TeacherClassPage from "../pages/teacher/TeacherClassPage";
 import UserManagementPage from "../pages/admin/UserManagement";
+import ParentMobileAppPage from "../pages/parent/ParentMobileAppPage";
 
 // Kiểm tra xem người dùng đã đăng nhập chưa
 const isAuthenticated = () => {
@@ -99,6 +100,12 @@ const AppRoute: FC = () => {
         {/* Public routes */}
         <Route path={ROUTES.HomePage} element={<HomePage />} />
         <Route path={ROUTES.Login} element={<LoginPage />} />
+
+        {/* Parent route - separate from dashboard layout */}
+        <Route
+          path={ROUTES.ParentMobileApp}
+          element={<ParentMobileAppPage />}
+        />
 
         {/* Protected routes */}
         <Route
