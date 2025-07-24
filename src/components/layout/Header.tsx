@@ -1,15 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Bell, Search, Menu } from "lucide-react";
 
 const Header: React.FC = () => {
   const [notifications, setNotifications] = useState<
     { id: string; title: string; time: string }[]
   >([
-    { id: "1", title: "New message from Nguyễn Văn Anh", time: "5 min ago" },
-    { id: "2", title: "Record book updated for Class 10A", time: "1 hour ago" },
-    { id: "3", title: "Weekly report ready for review", time: "3 hours ago" },
+    { id: "1", title: "New message from AI Assistant", time: "5 min ago" },
+    { id: "2", title: "Weekly report ready for review", time: "3 hours ago" },
   ]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [user, setUser] = useState<Record<string, string> | null>(null);
+
+  useEffect(() => {
+    // Lấy thông tin người dùng từ localStorage
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        const userData = JSON.parse(userStr);
+        setUser(userData);
+      } catch (error) {
+        console.error("Lỗi khi parse thông tin người dùng:", error);
+      }
+    }
+  }, []);
 
   const toggleNotifications = () => {
     setShowNotifications(!showNotifications);
@@ -19,13 +32,8 @@ const Header: React.FC = () => {
     setNotifications(notifications.filter((n) => n.id !== id));
   };
 
-  // TODO: Replace this mock user with real API data when available
-  const currentUser = {
-    name: "Nguyễn Admin",
-  };
-
   return (
-    <header className="bg-white border-b border-gray-200 py-4 px-6">
+    <header className="bg-white border-b border-gray-200 py-3 px-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <button className="md:hidden mr-4 text-gray-500 hover:text-gray-700">
@@ -108,12 +116,19 @@ const Header: React.FC = () => {
           </div>
 
           <div className="flex items-center">
-            <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 font-semibold">
-              {/* TODO: Replace currentUser mock with real user data */}
-              {currentUser?.name?.charAt(0).toUpperCase() || "U"}
-            </div>
+            {user?.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user.name}
+                className="h-8 w-8 rounded-full object-cover"
+              />
+            ) : (
+              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 font-semibold">
+                {user?.name?.charAt(0).toUpperCase() || "U"}
+              </div>
+            )}
             <span className="ml-2 text-sm font-medium text-gray-700 hidden md:inline-block">
-              {currentUser?.name || "User"}
+              {user?.name || "User"}
             </span>
           </div>
         </div>

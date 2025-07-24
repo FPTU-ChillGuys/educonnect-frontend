@@ -5,33 +5,50 @@ import {
   CardHeader,
   CardTitle,
 } from "../components/ui/Card";
-import { Users, Calendar, BookOpen, Bell, ChevronRight } from "lucide-react";
+import {
+  Users,
+  Calendar,
+  BookOpen,
+  ChevronRight,
+  School,
+  GraduationCap,
+  Shield,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import Button from "../components/ui/Button";
+import { ROUTES } from "../config/routes";
 
 // TODO: Thay thế mock userRole này bằng dữ liệu thực tế từ API khi có
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
+
   const getStats = () => {
     return [
       {
-        title: "Tổng số giáo viên",
-        value: "42",
-        icon: <Users className="text-blue-500" />,
-      },
-      {
         title: "Tổng số lớp",
-        value: "18",
-        icon: <BookOpen className="text-purple-500" />,
-      },
-      {
-        title: "Sự kiện tháng này",
-        value: "8",
-        icon: <Calendar className="text-teal-500" />,
-      },
-      {
-        title: "Thông báo mới",
         value: "12",
-        icon: <Bell className="text-amber-500" />,
+        icon: <School className="text-blue-500" />,
+        change: "+2",
+      },
+
+      {
+        title: "Tổng số giáo viên",
+        value: "11",
+        icon: <GraduationCap className="text-purple-500" />,
+        change: "+3",
+      },
+      {
+        title: "Tổng số học sinh",
+        value: "30",
+        icon: <Users className="text-teal-500" />,
+        change: "+12",
+      },
+      {
+        title: "Bản ghi hôm nay",
+        value: "127",
+        icon: <BookOpen className="text-amber-500" />,
+        change: "+15",
       },
     ];
   };
@@ -39,33 +56,45 @@ const Dashboard: React.FC = () => {
   const getRecentActivity = () => {
     return [
       {
-        text: "Thời khóa biểu học kỳ 2 đã được cập nhật",
+        text: "Giáo viên Trần Thị Mai đã cập nhật sổ đầu bài lớp 10A",
+        time: "15 phút trước",
+      },
+      {
+        text: "Thêm mới giáo viên Nguyễn Văn Bình vào hệ thống",
+        time: "1 giờ trước",
+      },
+      {
+        text: "Cập nhật thời khóa biểu học kỳ 2 cho tất cả các lớp",
         time: "2 giờ trước",
       },
       {
-        text: "Nguyễn Văn Anh đã thêm ghi chú mới cho lớp 10A",
+        text: "Lớp 12B đã hoàn thành 95% bản ghi trong tuần",
         time: "3 giờ trước",
       },
-      { text: "Lịch họp phụ huynh đã được gửi đi", time: "1 ngày trước" },
     ];
   };
 
   const getQuickActions = () => {
     return [
       {
-        text: "Quản lý thời khóa biểu",
-        icon: <Calendar size={16} />,
-        link: "#",
+        text: "Quản lý người dùng",
+        icon: <Shield size={16} />,
+        link: ROUTES.UserManagement,
       },
       {
         text: "Thêm lớp học mới",
-        icon: <Users size={16} />,
-        link: "#",
+        icon: <School size={16} />,
+        link: ROUTES.ClassManagement,
       },
       {
-        text: "Gửi thông báo toàn trường",
-        icon: <Bell size={16} />,
-        link: "#",
+        text: "Quản lý giáo viên",
+        icon: <GraduationCap size={16} />,
+        link: ROUTES.TeacherManagement,
+      },
+      {
+        text: "Cập nhật thời khóa biểu",
+        icon: <Calendar size={16} />,
+        link: ROUTES.TimeTable,
       },
     ];
   };
@@ -88,30 +117,46 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">
-          {getWelcomeMessage()}
-        </h1>
-        <p className="text-sm text-gray-600">
-          {new Date().toLocaleDateString("vi-VN", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
-        </p>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">
+            {getWelcomeMessage()}
+          </h1>
+          <p className="text-gray-600 mt-1">
+            {new Date().toLocaleDateString("vi-VN", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-sm text-gray-500">Năm học 2024-2025</p>
+          <p className="text-sm font-medium text-blue-600">Học kỳ 1</p>
+        </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {getStats().map((stat, index) => (
-          <Card key={index} className="border border-gray-200">
+          <Card
+            key={index}
+            className="border border-gray-200 hover:shadow-lg transition-shadow"
+          >
             <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="p-3 rounded-lg bg-gray-100">{stat.icon}</div>
-                <div className="ml-4">
+              <div className="flex items-center justify-between">
+                <div>
                   <p className="text-sm text-gray-600">{stat.title}</p>
-                  <p className="text-2xl font-semibold">{stat.value}</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">
+                    {stat.value}
+                  </p>
+                  {stat.change && (
+                    <p className="text-xs text-green-600 mt-1">
+                      +{stat.change} từ tuần trước
+                    </p>
+                  )}
                 </div>
+                <div className="p-3 rounded-lg bg-gray-100">{stat.icon}</div>
               </div>
             </CardContent>
           </Card>
@@ -134,6 +179,7 @@ const Dashboard: React.FC = () => {
                   leftIcon={action.icon}
                   rightIcon={<ChevronRight size={16} />}
                   className="justify-between"
+                  onClick={() => navigate(action.link)}
                 >
                   {action.text}
                 </Button>
@@ -166,52 +212,75 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Role-specific content */}
-      {/* {userRole === "classTeacher" && (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="border border-gray-200">
-          <CardHeader className="bg-blue-50">
-            <CardTitle>Lời dặn dò hôm nay</CardTitle>
+          <CardHeader className="bg-green-50">
+            <CardTitle className="text-green-800">Thống kê tuần này</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <textarea
-              className="w-full p-3 border border-gray-300 rounded-md min-h-32 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Nhập lời dặn dò cho học sinh..."
-              defaultValue="Các em nhớ hoàn thành bài tập Toán trang 45-46 và chuẩn bị cho bài kiểm tra Vật lý vào thứ Năm. Lớp trưởng nhắc các bạn dọn vệ sinh lớp học vào cuối giờ."
-            />
-            <div className="mt-4 flex justify-end">
-              <Button variant="primary">Lưu lời dặn dò</Button>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">
+                  Tỷ lệ hoàn thành sổ đầu bài
+                </span>
+                <span className="font-semibold text-green-600">94%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-green-500 h-2 rounded-full"
+                  style={{ width: "94%" }}
+                ></div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">
+                  Giáo viên hoạt động
+                </span>
+                <span className="font-semibold">42/45</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">
+                  Lớp có đầy đủ ghi chú
+                </span>
+                <span className="font-semibold">23/24</span>
+              </div>
             </div>
           </CardContent>
         </Card>
-      )}
 
-      {userRole === "parent" && (
         <Card className="border border-gray-200">
-          <CardHeader className="bg-blue-50">
-            <CardTitle>Trợ lý ảo EduConnect</CardTitle>
+          <CardHeader className="bg-amber-50">
+            <CardTitle className="text-amber-800">Cần chú ý</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <p className="text-gray-700 mb-4">
-              Bạn có thể hỏi trợ lý ảo về tình hình học tập của con em mình,
-              thời khóa biểu, các sự kiện sắp tới hoặc bất kỳ thông tin nào liên
-              quan đến trường học.
-            </p>
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                placeholder="Hỏi trợ lý ảo EduConnect..."
-                className="flex-1 p-2 border border-gray-300 rounded-l-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-              <Button variant="primary">Gửi</Button>
-            </div>
-            <div className="mt-3 text-xs text-gray-500">
-              <p>
-                Gợi ý: "Con tôi học thế nào hôm nay?", "Có bài tập về nhà
-                không?", "Tuần này có sự kiện gì?"
-              </p>
+            <div className="space-y-3">
+              <div className="p-3 bg-red-50 border-l-4 border-red-400 rounded">
+                <p className="text-sm font-medium text-red-800">
+                  Lớp 11C chưa có sổ đầu bài hôm nay
+                </p>
+                <p className="text-xs text-red-600 mt-1">
+                  Cần liên hệ giáo viên chủ nhiệm
+                </p>
+              </div>
+              <div className="p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                <p className="text-sm font-medium text-yellow-800">
+                  3 giáo viên chưa cập nhật lịch dạy
+                </p>
+                <p className="text-xs text-yellow-600 mt-1">
+                  Hạn chót: Cuối ngày hôm nay
+                </p>
+              </div>
+              <div className="p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
+                <p className="text-sm font-medium text-blue-800">
+                  Họp phụ huynh lớp 12 vào thứ 7
+                </p>
+                <p className="text-xs text-blue-600 mt-1">
+                  Cần chuẩn bị báo cáo tổng kết
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
-      )} */}
+      </div>
     </div>
   );
 };

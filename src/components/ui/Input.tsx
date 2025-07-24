@@ -21,9 +21,12 @@ const Input: React.FC<InputProps> = ({
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
-  const inputType = type === "password" && showPasswordToggle
-    ? showPassword ? "text" : "password"
-    : type;
+  const inputType =
+    type === "password" && showPasswordToggle
+      ? showPassword
+        ? "text"
+        : "password"
+      : type;
 
   return (
     <div className="mb-4">
@@ -44,7 +47,7 @@ const Input: React.FC<InputProps> = ({
             focus:border-blue-500 focus:ring-blue-500 text-base
             py-3 px-4
             ${leftIcon ? "pl-12" : ""}
-            ${(rightIcon || showPasswordToggle) ? "pr-12" : ""}
+            ${rightIcon || showPasswordToggle ? "pr-12" : ""}
             ${error ? "border-red-300" : "border-gray-300"}
             ${className}
           `}
@@ -57,11 +60,7 @@ const Input: React.FC<InputProps> = ({
             onClick={() => setShowPassword(!showPassword)}
             className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none"
           >
-            {showPassword ? (
-              <EyeOff size={20} />
-            ) : (
-              <Eye size={20} />
-            )}
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
         )}
         {rightIcon && !showPasswordToggle && (
