@@ -3,8 +3,6 @@ import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   CalendarDays,
-  BookOpen,
-  Users,
   Settings,
   LogOut,
   GraduationCap,
