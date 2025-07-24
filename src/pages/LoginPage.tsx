@@ -142,6 +142,8 @@ const LoginPage: React.FC = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="Nhập email của bạn"
                 required
                 // leftIcon={<User size={18} />}
@@ -302,9 +304,18 @@ const LoginPage: React.FC = () => {
           EduConnect © 2025 - AI Virtual Assistant for Parent-Teacher
           Communication
         </div>
+
+        <p className="mt-8 text-center text-xs text-gray-500">
+          EduConnect © 2025 - AI Virtual Assistant for Parent-Teacher
+          Communication
+        </p>
       </div>
     </div>
   );
 };
+  );
+};
+
+export default LoginPage;
 
 export default LoginPage;
